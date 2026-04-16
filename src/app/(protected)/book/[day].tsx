@@ -2,36 +2,43 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { useAuth } from "../../../providers/AuthProvider";
 import { getStampsByDay } from "../../../services/stamps";
-import { Stamp } from "../../../types/stamp";
+import type { Stamp } from "../../../types/stamp";
 import { formatDayLabel } from "../../../utils/date";
 
 export default function DayScreen() {
   const { day } = useLocalSearchParams<{ day?: string }>();
+  const { user } = useAuth();
+
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      if (!day) return;
+      if (!day || !user) return;
 
       try {
         setLoading(true);
-        const data = await getStampsByDay(day);
+        const data = await getStampsByDay(user.id, day);
         setStamps(data);
+      } catch (error) {
+        console.log("getStampsByDay error:", error);
+        Alert.alert("Error", "Failed to load day stamps.");
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [day]);
+  }, [day, user]);
 
   if (!day) {
     return (
@@ -60,7 +67,7 @@ export default function DayScreen() {
         numColumns={3}
         contentContainerStyle={styles.list}
         columnWrapperStyle={styles.row}
-        renderItem={({ item }) => <StampFrame uri={item.uri} size={100} />}
+        renderItem={({ item }) => <StampFrame uri={item.imageUrl} size={100} />}
       />
     </View>
   );

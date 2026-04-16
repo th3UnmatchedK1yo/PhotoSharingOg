@@ -2,7 +2,7 @@ import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../../providers/AuthProvider";
 
-export default function ProtectedLayout() {
+export default function AuthLayout() {
   const { loading, session } = useAuth();
 
   if (loading) {
@@ -13,16 +13,9 @@ export default function ProtectedLayout() {
     );
   }
 
-  if (!session) {
-    return <Redirect href="/sign-in" />;
+  if (session) {
+    return <Redirect href="/stamp" />;
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="stamp/index" />
-      <Stack.Screen name="stamp/review" />
-      <Stack.Screen name="book/index" />
-      <Stack.Screen name="book/[day]" />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

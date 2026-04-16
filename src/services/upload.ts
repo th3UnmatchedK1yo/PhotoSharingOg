@@ -11,7 +11,7 @@ export async function uploadStampImage(
   const result = await uploadToCloudinary(localUri);
 
   if (!result.secure_url || !result.public_id) {
-    throw new Error("Cloudinary upload succeeded but returned incomplete data.");
+    throw new Error("Cloudinary upload returned incomplete data.");
   }
 
   return {

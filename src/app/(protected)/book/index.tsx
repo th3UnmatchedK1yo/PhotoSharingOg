@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,30 +10,48 @@ import {
   View,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { useAuth } from "../../../providers/AuthProvider";
 import { getGroupedStamps } from "../../../services/stamps";
-import { Stamp } from "../../../types/stamp";
+import type { Stamp } from "../../../types/stamp";
 import { formatDayLabel } from "../../../utils/date";
 
 export default function BookScreen() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
+
   const [grouped, setGrouped] = useState<Record<string, Stamp[]>>({});
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
-      const data = await getGroupedStamps();
+      const data = await getGroupedStamps(user.id);
       setGrouped(data);
+    } catch (error) {
+      console.log("getGroupedStamps error:", error);
+      Alert.alert("Error", "Failed to load stamps.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [loadData])
   );
+
+  const onSignOut = async () => {
+    try {
+      await signOut();
+      router.replace("/sign-in");
+    } catch (error) {
+      console.log("signOut error:", error);
+      Alert.alert("Error", "Failed to sign out.");
+    }
+  };
 
   const dayKeys = Object.keys(grouped).sort((a, b) => (a < b ? 1 : -1));
 
@@ -51,13 +70,22 @@ export default function BookScreen() {
         <Pressable style={styles.addButton} onPress={() => router.push("/stamp")}>
           <Text style={styles.addButtonText}>Take your first stamp</Text>
         </Pressable>
+
+        <Pressable style={styles.secondaryAction} onPress={onSignOut}>
+          <Text style={styles.secondaryActionText}>Sign out</Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Collections</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Collections</Text>
+        <Pressable onPress={onSignOut}>
+          <Text style={styles.signOutText}>Sign out</Text>
+        </Pressable>
+      </View>
 
       {dayKeys.map((dayKey) => {
         const stamps = grouped[dayKey];
@@ -77,7 +105,7 @@ export default function BookScreen() {
             <View style={styles.previewRow}>
               {previews.map((stamp) => (
                 <View key={stamp.id} style={styles.previewItem}>
-                  <StampFrame uri={stamp.uri} size={90} />
+                  <StampFrame uri={stamp.imageUrl} size={90} />
                 </View>
               ))}
             </View>
@@ -105,11 +133,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
   title: {
     fontSize: 42,
     fontWeight: "700",
     color: "#4f4a47",
-    marginBottom: 20,
+  },
+  signOutText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#5f5a56",
   },
   emptyTitle: {
     fontSize: 22,
@@ -127,6 +165,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  secondaryAction: {
+    marginTop: 16,
+  },
+  secondaryActionText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#5f5a56",
   },
   card: {
     backgroundColor: "#fbf8f5",

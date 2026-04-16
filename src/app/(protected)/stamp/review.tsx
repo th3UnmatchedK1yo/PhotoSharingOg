@@ -11,33 +11,36 @@ import {
   View,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
-import { saveStamp } from "../../../services/stamps";
-import { uploadStampImage } from "../../../services/upload";
+import { useAuth } from "../../../providers/AuthProvider";
+import { saveRemoteStamp } from "../../../services/stamps";
 
 export default function ReviewScreen() {
   const router = useRouter();
   const { uri } = useLocalSearchParams<{ uri?: string }>();
+  const { user } = useAuth();
+
   const [caption, setCaption] = useState("");
   const [saving, setSaving] = useState(false);
 
   const onSave = async () => {
     if (!uri || saving) return;
 
+    if (!user) {
+      Alert.alert("Not signed in", "Please sign in again.");
+      router.replace("/sign-in");
+      return;
+    }
+
     try {
       setSaving(true);
-
-      const uploaded = await uploadStampImage(uri);
-
-      console.log("Cloudinary image URL:", uploaded.imageUrl);
-      console.log("Cloudinary public ID:", uploaded.publicId);
-
-      // Keep local save for now so /book still shows the stamp.
-      // Later, replace this with a Supabase insert.
-      await saveStamp(uri, caption);
-
+      await saveRemoteStamp({
+        userId: user.id,
+        localUri: uri,
+        caption,
+      });
       router.replace("/book");
     } catch (error) {
-      console.log("save/upload error:", error);
+      console.log("saveRemoteStamp error:", error);
       Alert.alert("Error", "Failed to upload and save stamp.");
     } finally {
       setSaving(false);
