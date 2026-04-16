@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -22,20 +22,23 @@ import type {
 } from "../../../types/project";
 import type { Stamp } from "../../../types/stamp";
 
+const BACKGROUND_LAYER_ID = "__paper_background_layer__";
+
 function reconcileStampLayers(
   stamps: Stamp[],
   existing: StampLayer[],
 ): StampLayer[] {
-  const layerByStamp = new Map(existing.map((l) => [l.stampId, l]));
-  const stampIds = new Set(stamps.map((s) => s.id));
+  const layerByStamp = new Map(existing.map((layer) => [layer.stampId, layer]));
+  const stampIds = new Set(stamps.map((stamp) => stamp.id));
 
-  const kept = existing.filter((l) => stampIds.has(l.stampId));
+  const kept = existing.filter((layer) => stampIds.has(layer.stampId));
 
   const added: StampLayer[] = [];
   stamps.forEach((stamp, idx) => {
     if (!layerByStamp.has(stamp.id)) {
       const col = idx % 2;
       const row = Math.floor(idx / 2);
+
       added.push({
         id: `sl-${stamp.id}`,
         stampId: stamp.id,
@@ -51,6 +54,57 @@ function reconcileStampLayers(
   return [...kept, ...added];
 }
 
+function areStampLayersEqual(a: StampLayer[], b: StampLayer[]) {
+  if (a.length !== b.length) return false;
+
+  return a.every((layer, index) => {
+    const other = b[index];
+    return (
+      !!other &&
+      layer.id === other.id &&
+      layer.stampId === other.stampId &&
+      layer.x === other.x &&
+      layer.y === other.y &&
+      layer.scale === other.scale &&
+      layer.rotation === other.rotation &&
+      layer.z === other.z
+    );
+  });
+}
+
+function getBackgroundLayer(canvas: ProjectCanvasConfig) {
+  return canvas.assetLayers.find((layer) => layer.id === BACKGROUND_LAYER_ID);
+}
+
+function getSelectedBackgroundKey(project: Project | null) {
+  if (!project) return "";
+  return getBackgroundLayer(project.canvas)?.assetKey ?? "";
+}
+
+function buildBackgroundLayer(
+  assetKey: string,
+  existing?: AssetLayer,
+): AssetLayer {
+  return {
+    id: BACKGROUND_LAYER_ID,
+    assetKey,
+    x: existing?.x ?? 0.07,
+    y: existing?.y ?? 0.12,
+    scale: existing?.scale ?? 1,
+    rotation: existing?.rotation ?? 0,
+    z: 0,
+  };
+}
+
+function getMaxZ(canvas: ProjectCanvasConfig) {
+  return Math.max(
+    0,
+    ...canvas.stampLayers.map((layer) => layer.z),
+    ...canvas.assetLayers.map((layer) => layer.z),
+    ...canvas.textLayers.map((layer) => layer.z),
+  );
+}
+
 type SheetTab = "backgrounds" | "assets" | "text";
 
 export default function ProjectDetailScreen() {
@@ -61,8 +115,12 @@ export default function ProjectDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SheetTab>("backgrounds");
+  const [selectedTextLayerId, setSelectedTextLayerId] = useState<string | null>(
+    null,
+  );
 
   const didReconcile = useRef(false);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadProject = useCallback(async () => {
     if (!id) return;
@@ -86,54 +144,150 @@ export default function ProjectDetailScreen() {
     }, [loadProject]),
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!project || didReconcile.current) return;
-      didReconcile.current = true;
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current) {
+        clearTimeout(persistTimerRef.current);
+      }
+    };
+  }, []);
 
-      const reconciled = reconcileStampLayers(
-        project.stamps,
-        project.canvas.stampLayers,
-      );
+  useEffect(() => {
+    if (!project || didReconcile.current) return;
+    didReconcile.current = true;
 
-      const changed =
-        reconciled.length !== project.canvas.stampLayers.length ||
-        reconciled.some(
-          (l, i) => l.id !== project.canvas.stampLayers[i]?.id,
-        );
+    let nextCanvas = project.canvas;
+    let changed = false;
 
-      if (!changed) return;
+    const reconciledStamps = reconcileStampLayers(
+      project.stamps,
+      nextCanvas.stampLayers,
+    );
 
-      const updatedCanvas: ProjectCanvasConfig = {
-        ...project.canvas,
-        stampLayers: reconciled,
+    if (!areStampLayersEqual(reconciledStamps, nextCanvas.stampLayers)) {
+      nextCanvas = {
+        ...nextCanvas,
+        stampLayers: reconciledStamps,
       };
+      changed = true;
+    }
 
-      setProject((prev) => (prev ? { ...prev, canvas: updatedCanvas } : prev));
+    if (
+      !getBackgroundLayer(nextCanvas) &&
+      project.backgroundKey &&
+      project.backgroundKey !== "bg1"
+    ) {
+      nextCanvas = {
+        ...nextCanvas,
+        assetLayers: [
+          buildBackgroundLayer(project.backgroundKey),
+          ...nextCanvas.assetLayers,
+        ],
+      };
+      changed = true;
+    }
 
-      updateProjectDesign(project.id, { canvas: updatedCanvas }).catch((err) =>
-        console.log("reconcile save error:", err),
-      );
-    }, [project]),
-  );
+    if (!changed) return;
 
-  const saveCanvas = async (canvas: ProjectCanvasConfig) => {
+    setProject((prev) => (prev ? { ...prev, canvas: nextCanvas } : prev));
+
+    updateProjectDesign(project.id, { canvas: nextCanvas }).catch((error) => {
+      console.log("reconcile save error:", error);
+    });
+  }, [project]);
+
+  useEffect(() => {
     if (!project) return;
 
-    setProject((prev) => (prev ? { ...prev, canvas } : prev));
+    if (
+      selectedTextLayerId &&
+      project.canvas.textLayers.some((layer) => layer.id === selectedTextLayerId)
+    ) {
+      return;
+    }
+
+    setSelectedTextLayerId(project.canvas.textLayers[0]?.id ?? null);
+  }, [project, selectedTextLayerId]);
+
+  const queueCanvasPersist = useCallback(
+    (canvas: ProjectCanvasConfig, backgroundKey?: string) => {
+      if (!project) return;
+
+      if (persistTimerRef.current) {
+        clearTimeout(persistTimerRef.current);
+      }
+
+      const projectId = project.id;
+
+      persistTimerRef.current = setTimeout(() => {
+        updateProjectDesign(projectId, {
+          canvas,
+          ...(backgroundKey !== undefined ? { backgroundKey } : {}),
+        }).catch((error) => {
+          console.log("debounced canvas save error:", error);
+        });
+      }, 300);
+    },
+    [project],
+  );
+
+  const saveCanvas = async (
+    canvas: ProjectCanvasConfig,
+    options?: { backgroundKey?: string },
+  ) => {
+    if (!project) return;
+
+    setProject((prev) =>
+      prev
+        ? {
+            ...prev,
+            canvas,
+            ...(options?.backgroundKey !== undefined
+              ? { backgroundKey: options.backgroundKey }
+              : {}),
+          }
+        : prev,
+    );
 
     try {
-      await updateProjectDesign(project.id, { canvas });
+      await updateProjectDesign(project.id, {
+        canvas,
+        ...(options?.backgroundKey !== undefined
+          ? { backgroundKey: options.backgroundKey }
+          : {}),
+      });
     } catch (error) {
       console.log("saveCanvas error:", error);
+      loadProject();
     }
+  };
+
+  const updateCanvasLocally = (
+    canvas: ProjectCanvasConfig,
+    options?: { backgroundKey?: string },
+  ) => {
+    if (!project) return;
+
+    setProject((prev) =>
+      prev
+        ? {
+            ...prev,
+            canvas,
+            ...(options?.backgroundKey !== undefined
+              ? { backgroundKey: options.backgroundKey }
+              : {}),
+          }
+        : prev,
+    );
+
+    queueCanvasPersist(canvas, options?.backgroundKey);
   };
 
   const onStampDragEnd = (layerId: string, x: number, y: number) => {
     if (!project) return;
 
-    const stampLayers = project.canvas.stampLayers.map((l) =>
-      l.id === layerId ? { ...l, x, y } : l,
+    const stampLayers = project.canvas.stampLayers.map((layer) =>
+      layer.id === layerId ? { ...layer, x, y } : layer,
     );
 
     saveCanvas({ ...project.canvas, stampLayers });
@@ -142,35 +296,44 @@ export default function ProjectDetailScreen() {
   const onAssetDragEnd = (layerId: string, x: number, y: number) => {
     if (!project) return;
 
-    const assetLayers = project.canvas.assetLayers.map((l) =>
-      l.id === layerId ? { ...l, x, y } : l,
+    const assetLayers = project.canvas.assetLayers.map((layer) =>
+      layer.id === layerId ? { ...layer, x, y } : layer,
     );
 
     saveCanvas({ ...project.canvas, assetLayers });
   };
 
-  const onChangeBackground = async (backgroundKey: string) => {
+  const onTextDragEnd = (layerId: string, x: number, y: number) => {
     if (!project) return;
 
-    setProject((prev) => (prev ? { ...prev, backgroundKey } : prev));
+    const textLayers = project.canvas.textLayers.map((layer) =>
+      layer.id === layerId ? { ...layer, x, y } : layer,
+    );
 
-    try {
-      await updateProjectDesign(project.id, { backgroundKey });
-    } catch (error) {
-      console.log("background save error:", error);
-      loadProject();
-    }
+    setSelectedTextLayerId(layerId);
+    saveCanvas({ ...project.canvas, textLayers });
+  };
+
+  const onChangeBackground = (backgroundKey: string) => {
+    if (!project) return;
+
+    const existing = getBackgroundLayer(project.canvas);
+    const otherAssets = project.canvas.assetLayers.filter(
+      (layer) => layer.id !== BACKGROUND_LAYER_ID,
+    );
+
+    const backgroundLayer = buildBackgroundLayer(backgroundKey, existing);
+
+    const updatedCanvas: ProjectCanvasConfig = {
+      ...project.canvas,
+      assetLayers: [backgroundLayer, ...otherAssets],
+    };
+
+    saveCanvas(updatedCanvas, { backgroundKey });
   };
 
   const onAddAsset = (assetKey: string) => {
     if (!project) return;
-
-    const maxZ = Math.max(
-      0,
-      ...project.canvas.stampLayers.map((l) => l.z),
-      ...project.canvas.assetLayers.map((l) => l.z),
-      ...project.canvas.textLayers.map((l) => l.z),
-    );
 
     const newLayer: AssetLayer = {
       id: `al-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -179,7 +342,7 @@ export default function ProjectDetailScreen() {
       y: 0.25 + Math.random() * 0.25,
       scale: 1,
       rotation: 0,
-      z: maxZ + 1,
+      z: getMaxZ(project.canvas) + 1,
     };
 
     const updatedCanvas: ProjectCanvasConfig = {
@@ -193,13 +356,6 @@ export default function ProjectDetailScreen() {
   const onAddText = (fontKey: FontKey) => {
     if (!project) return;
 
-    const maxZ = Math.max(
-      0,
-      ...project.canvas.stampLayers.map((l) => l.z),
-      ...project.canvas.assetLayers.map((l) => l.z),
-      ...project.canvas.textLayers.map((l) => l.z),
-    );
-
     const newLayer: TextLayer = {
       id: `tl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       text: "Your text",
@@ -209,7 +365,7 @@ export default function ProjectDetailScreen() {
       x: 0.15,
       y: 0.06,
       rotation: 0,
-      z: maxZ + 1,
+      z: getMaxZ(project.canvas) + 1,
     };
 
     const updatedCanvas: ProjectCanvasConfig = {
@@ -217,7 +373,48 @@ export default function ProjectDetailScreen() {
       textLayers: [...project.canvas.textLayers, newLayer],
     };
 
+    setSelectedTextLayerId(newLayer.id);
     saveCanvas(updatedCanvas);
+  };
+
+  const onSelectTextLayer = (layerId: string) => {
+    setSelectedTextLayerId(layerId);
+  };
+
+  const onTextPress = (layerId: string) => {
+    setSelectedTextLayerId(layerId);
+    setActiveTab("text");
+  };
+
+  const onChangeSelectedText = (text: string) => {
+    if (!project || !selectedTextLayerId) return;
+
+    const textLayers = project.canvas.textLayers.map((layer) =>
+      layer.id === selectedTextLayerId ? { ...layer, text } : layer,
+    );
+
+    updateCanvasLocally({ ...project.canvas, textLayers });
+  };
+
+  const onChangeSelectedTextFont = (fontKey: FontKey) => {
+    if (!project || !selectedTextLayerId) return;
+
+    const textLayers = project.canvas.textLayers.map((layer) =>
+      layer.id === selectedTextLayerId ? { ...layer, fontKey } : layer,
+    );
+
+    updateCanvasLocally({ ...project.canvas, textLayers });
+  };
+
+  const onDeleteSelectedText = () => {
+    if (!project || !selectedTextLayerId) return;
+
+    const textLayers = project.canvas.textLayers.filter(
+      (layer) => layer.id !== selectedTextLayerId,
+    );
+
+    setSelectedTextLayerId(textLayers[0]?.id ?? null);
+    saveCanvas({ ...project.canvas, textLayers });
   };
 
   if (loading) {
@@ -235,6 +432,10 @@ export default function ProjectDetailScreen() {
       </View>
     );
   }
+
+  const selectedTextLayer =
+    project.canvas.textLayers.find((layer) => layer.id === selectedTextLayerId) ??
+    null;
 
   return (
     <View style={styles.screen}>
@@ -259,11 +460,13 @@ export default function ProjectDetailScreen() {
 
       <View style={styles.canvasWrap}>
         <ProjectCanvas
-          backgroundKey={project.backgroundKey}
           canvas={project.canvas}
           stamps={project.stamps}
           onStampDragEnd={onStampDragEnd}
           onAssetDragEnd={onAssetDragEnd}
+          onTextDragEnd={onTextDragEnd}
+          onTextPress={onTextPress}
+          selectedTextLayerId={selectedTextLayerId}
         />
       </View>
 
@@ -307,10 +510,22 @@ export default function ProjectDetailScreen() {
         activeTab={activeTab}
         onClose={() => setSheetOpen(false)}
         onChangeTab={setActiveTab}
-        selectedBackground={project.backgroundKey}
+        selectedBackground={getSelectedBackgroundKey(project)}
         onSelectBackground={onChangeBackground}
         onAddAsset={onAddAsset}
         onAddText={onAddText}
+        textLayers={project.canvas.textLayers.map((layer) => ({
+          id: layer.id,
+          text: layer.text,
+          fontKey: layer.fontKey,
+        }))}
+        selectedTextLayerId={selectedTextLayerId}
+        selectedTextValue={selectedTextLayer?.text ?? ""}
+        selectedTextFontKey={selectedTextLayer?.fontKey ?? null}
+        onSelectTextLayer={onSelectTextLayer}
+        onChangeSelectedText={onChangeSelectedText}
+        onChangeSelectedTextFont={onChangeSelectedTextFont}
+        onDeleteSelectedText={onDeleteSelectedText}
       />
     </View>
   );

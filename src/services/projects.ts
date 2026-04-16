@@ -42,7 +42,7 @@ function mapStamp(row: StampRow): Stamp {
 }
 
 function parseBackgroundKey(value: string | null | undefined): string {
-  return value || "bg1";
+  return value?.trim() ?? "";
 }
 
 const EMPTY_CANVAS: ProjectCanvasConfig = {
@@ -94,7 +94,7 @@ async function getProjectStamps(projectId: string): Promise<Stamp[]> {
         captured_at,
         created_at
       )
-    `
+      `,
     )
     .eq("project_id", projectId);
 
@@ -121,7 +121,7 @@ export async function createProject(userId: string, name: string) {
       user_id: userId,
       name: trimmed,
       status: "draft",
-      background_key: "bg1",
+      background_key: "",
       canvas_json: { stampLayers: [], assetLayers: [], textLayers: [] },
     })
     .select("*")
@@ -135,7 +135,10 @@ export async function createProject(userId: string, name: string) {
 }
 
 export async function deleteProject(projectId: string) {
-  const { error } = await supabase.from("projects").delete().eq("id", projectId);
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", projectId);
 
   if (error) {
     throw error;
@@ -171,7 +174,7 @@ export async function getProjects(userId: string): Promise<ProjectSummary[]> {
         backgroundKey: parseBackgroundKey(row.background_key),
         canvas: parseCanvasConfig(row.canvas_json),
       } satisfies ProjectSummary;
-    })
+    }),
   );
 
   return summaries;
@@ -234,21 +237,24 @@ export async function updateProjectDesign(
   payload: {
     backgroundKey?: string;
     canvas?: ProjectCanvasConfig;
-  }
+  },
 ) {
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
 
-  if (payload.backgroundKey) {
+  if (payload.backgroundKey !== undefined) {
     updateData.background_key = payload.backgroundKey;
   }
 
-  if (payload.canvas) {
+  if (payload.canvas !== undefined) {
     updateData.canvas_json = payload.canvas;
   }
 
-  const { error } = await supabase.from("projects").update(updateData).eq("id", projectId);
+  const { error } = await supabase
+    .from("projects")
+    .update(updateData)
+    .eq("id", projectId);
 
   if (error) {
     throw error;
