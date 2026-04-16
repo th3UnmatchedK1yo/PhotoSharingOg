@@ -23,6 +23,10 @@ export default function ProtectedLayout() {
       <Stack.Screen name="stamp/review" />
       <Stack.Screen name="book/index" />
       <Stack.Screen name="book/[day]" />
+      <Stack.Screen name="calendar/index" />
+      <Stack.Screen name="editor/index" />
+      <Stack.Screen name="editor/[id]" />
+      <Stack.Screen name="editor/select-stamps" />
     </Stack>
   );
 }

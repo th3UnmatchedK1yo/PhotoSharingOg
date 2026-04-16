@@ -2,6 +2,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import BottomTabBar from "../../../components/shared/BottomTabBar";
 
 export default function StampCameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -14,6 +15,7 @@ export default function StampCameraScreen() {
 
     try {
       setIsTakingPhoto(true);
+
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
@@ -58,22 +60,16 @@ export default function StampCameraScreen() {
         <View style={styles.frame} />
       </View>
 
-      <View style={styles.bottomBar}>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push("/book")}>
-          <Text style={styles.secondaryButtonText}>Book</Text>
-        </Pressable>
-
+      <View style={styles.shutterWrap}>
         <Pressable
           style={[styles.shutterButton, isTakingPhoto && { opacity: 0.6 }]}
           onPress={takePicture}
         >
           <View style={styles.shutterInner} />
         </Pressable>
-
-        <View style={styles.placeholder}>
-          <Text style={styles.secondaryButtonText}>Stamp</Text>
-        </View>
       </View>
+
+      <BottomTabBar active="stamp" />
     </View>
   );
 }
@@ -125,26 +121,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: "transparent",
   },
-  bottomBar: {
+  shutterWrap: {
     position: "absolute",
-    bottom: 36,
-    left: 20,
-    right: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  secondaryButton: {
-    minWidth: 70,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  placeholder: {
-    minWidth: 70,
+    bottom: 112,
+    left: 0,
+    right: 0,
     alignItems: "center",
   },
   shutterButton: {

@@ -33,11 +33,13 @@ export default function ReviewScreen() {
 
     try {
       setSaving(true);
+
       await saveRemoteStamp({
         userId: user.id,
         localUri: uri,
         caption,
       });
+
       router.replace("/book");
     } catch (error) {
       console.log("saveRemoteStamp error:", error);

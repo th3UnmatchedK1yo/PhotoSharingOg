@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import BottomTabBar from "../../../components/shared/BottomTabBar";
+import OverflowMenu from "../../../components/shared/OverFlowMenu";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getGroupedStamps } from "../../../services/stamps";
 import type { Stamp } from "../../../types/stamp";
@@ -55,99 +57,97 @@ export default function BookScreen() {
 
   const dayKeys = Object.keys(grouped).sort((a, b) => (a < b ? 1 : -1));
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (dayKeys.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.emptyTitle}>Your Book is empty</Text>
-        <Pressable style={styles.addButton} onPress={() => router.push("/stamp")}>
-          <Text style={styles.addButtonText}>Take your first stamp</Text>
-        </Pressable>
-
-        <Pressable style={styles.secondaryAction} onPress={onSignOut}>
-          <Text style={styles.secondaryActionText}>Sign out</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.titleRow}>
+    <View style={styles.screen}>
+      <View style={styles.headerRow}>
         <Text style={styles.title}>Collections</Text>
-        <Pressable onPress={onSignOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
+        <OverflowMenu onSignOut={onSignOut} />
       </View>
 
-      {dayKeys.map((dayKey) => {
-        const stamps = grouped[dayKey];
-        const previews = stamps.slice(0, 3);
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator />
+        </View>
+      ) : dayKeys.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.emptyTitle}>Your Book is empty</Text>
 
-        return (
-          <Pressable
-            key={dayKey}
-            style={styles.card}
-            onPress={() => router.push(`/book/${dayKey}`)}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.dayLabel}>{formatDayLabel(dayKey)}</Text>
-              <Text style={styles.countText}>{stamps.length} stamps</Text>
-            </View>
-
-            <View style={styles.previewRow}>
-              {previews.map((stamp) => (
-                <View key={stamp.id} style={styles.previewItem}>
-                  <StampFrame uri={stamp.imageUrl} size={90} />
-                </View>
-              ))}
-            </View>
+          <Pressable style={styles.addButton} onPress={() => router.push("/stamp")}>
+            <Text style={styles.addButtonText}>Take your first stamp</Text>
           </Pressable>
-        );
-      })}
-    </ScrollView>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {dayKeys.map((dayKey) => {
+            const stamps = grouped[dayKey];
+            const previews = stamps.slice(0, 3);
+
+            return (
+              <Pressable
+                key={dayKey}
+                style={styles.card}
+                onPress={() => router.push(`/book/${dayKey}`)}
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.dayLabel}>{formatDayLabel(dayKey)}</Text>
+                  <Text style={styles.countText}>{stamps.length} stamps</Text>
+                </View>
+
+                <View style={styles.previewRow}>
+                  {previews.map((stamp) => (
+                    <View key={stamp.id} style={styles.previewItem}>
+                      <StampFrame uri={stamp.imageUrl} size={90} />
+                    </View>
+                  ))}
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      <BottomTabBar active="book" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: "#f5f1ed",
   },
-  content: {
-    padding: 20,
+  headerRow: {
+    paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 40,
-  },
-  center: {
-    flex: 1,
-    backgroundColor: "#f5f1ed",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  titleRow: {
+    paddingBottom: 12,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 20,
+    gap: 16,
   },
   title: {
+    flex: 1,
     fontSize: 42,
     fontWeight: "700",
     color: "#4f4a47",
   },
-  signOutText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#5f5a56",
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 120,
   },
   emptyTitle: {
     fontSize: 22,
@@ -165,14 +165,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-  secondaryAction: {
-    marginTop: 16,
-  },
-  secondaryActionText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#5f5a56",
   },
   card: {
     backgroundColor: "#fbf8f5",
