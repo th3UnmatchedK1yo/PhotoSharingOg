@@ -1,10 +1,43 @@
 import type { Stamp } from "./stamp";
 
-export type ProjectLayout = "single" | "two" | "three" | "grid";
-export type ProjectBackground = "paper" | "soft-paper" | "plain" | "grid";
+export type FontKey = "classic-serif" | "fz-kingshare";
+
+export type StampLayer = {
+  id: string;
+  stampId: string;
+  x: number; // 0..1 relative to canvas width
+  y: number; // 0..1 relative to canvas height
+  scale: number;
+  rotation: number;
+  z: number;
+};
+
+export type AssetLayer = {
+  id: string;
+  assetKey: string;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  z: number;
+};
+
+export type TextLayer = {
+  id: string;
+  text: string;
+  fontKey: FontKey;
+  fontSize: number;
+  color: string;
+  x: number;
+  y: number;
+  rotation: number;
+  z: number;
+};
 
 export type ProjectCanvasConfig = {
-  layout: ProjectLayout;
+  stampLayers: StampLayer[];
+  assetLayers: AssetLayer[];
+  textLayers: TextLayer[];
 };
 
 export type ProjectSummary = {
@@ -16,7 +49,7 @@ export type ProjectSummary = {
   updatedAt: string;
   stampCount: number;
   previewImages: string[];
-  backgroundKey: ProjectBackground;
+  backgroundKey: string;
   canvas: ProjectCanvasConfig;
 };
 
@@ -27,7 +60,7 @@ export type Project = {
   status: string;
   createdAt: string;
   updatedAt: string;
-  backgroundKey: ProjectBackground;
+  backgroundKey: string;
   canvas: ProjectCanvasConfig;
   stamps: Stamp[];
 };

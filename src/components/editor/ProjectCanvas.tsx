@@ -1,32 +1,229 @@
-import { StyleSheet, Text, View } from "react-native";
-import StampFrame from "../stamp/StampFrame";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  Image,
+  ImageBackground,
+  PanResponder,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
+import { ASSET_MAP, BACKGROUND_MAP, FONT_OPTIONS } from "../../constants/editorCatalog";
 import type {
-  ProjectBackground,
+  AssetLayer,
   ProjectCanvasConfig,
+  StampLayer,
+  TextLayer,
 } from "../../types/project";
 import type { Stamp } from "../../types/stamp";
+import StampFrame from "../stamp/StampFrame";
 
 type ProjectCanvasProps = {
-  backgroundKey: ProjectBackground;
+  backgroundKey: string;
   canvas: ProjectCanvasConfig;
   stamps: Stamp[];
+  onStampDragEnd?: (layerId: string, x: number, y: number) => void;
+  onAssetDragEnd?: (layerId: string, x: number, y: number) => void;
 };
 
-function GridOverlay() {
+const STAMP_BASE = 120;
+const ASSET_BASE = 80;
+
+function DraggableLayer({
+  x,
+  y,
+  z,
+  rotation,
+  canvasWidth,
+  canvasHeight,
+  layerWidth,
+  layerHeight,
+  onDragEnd,
+  children,
+}: {
+  x: number;
+  y: number;
+  z: number;
+  rotation: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  layerWidth: number;
+  layerHeight: number;
+  onDragEnd: (nx: number, ny: number) => void;
+  children: React.ReactNode;
+}) {
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  const posRef = useRef({ x, y });
+  posRef.current = { x, y };
+
+  const dimsRef = useRef({ canvasWidth, canvasHeight, layerWidth, layerHeight });
+  dimsRef.current = { canvasWidth, canvasHeight, layerWidth, layerHeight };
+
+  const cbRef = useRef(onDragEnd);
+  cbRef.current = onDragEnd;
+
+  useEffect(() => {
+    pan.setValue({ x: 0, y: 0 });
+  }, [x, y, pan]);
+
+  const responder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gs) =>
+          Math.abs(gs.dx) > 2 || Math.abs(gs.dy) > 2,
+        onPanResponderMove: Animated.event(
+          [null, { dx: pan.x, dy: pan.y }],
+          { useNativeDriver: false },
+        ),
+        onPanResponderRelease: (_, gs) => {
+          const d = dimsRef.current;
+          const p = posRef.current;
+
+          const rawX = p.x * d.canvasWidth + gs.dx;
+          const rawY = p.y * d.canvasHeight + gs.dy;
+
+          const clampedX = Math.max(0, Math.min(rawX, d.canvasWidth - d.layerWidth));
+          const clampedY = Math.max(0, Math.min(rawY, d.canvasHeight - d.layerHeight));
+
+          const nx = d.canvasWidth > 0 ? clampedX / d.canvasWidth : 0;
+          const ny = d.canvasHeight > 0 ? clampedY / d.canvasHeight : 0;
+
+          pan.setValue({ x: 0, y: 0 });
+          cbRef.current(nx, ny);
+        },
+      }),
+    [pan],
+  );
+
+  const pxX = x * canvasWidth;
+  const pxY = y * canvasHeight;
+
   return (
-    <View pointerEvents="none" style={styles.gridOverlay}>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <View
-          key={`v-${i}`}
-          style={[styles.gridLineVertical, { left: `${(i + 1) * 14.28}%` }]}
-        />
-      ))}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <View
-          key={`h-${i}`}
-          style={[styles.gridLineHorizontal, { top: `${(i + 1) * 11.11}%` }]}
-        />
-      ))}
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: pxX,
+        top: pxY,
+        zIndex: z,
+        transform: [
+          { translateX: pan.x },
+          { translateY: pan.y },
+          { rotate: `${rotation}deg` },
+        ],
+      }}
+      {...responder.panHandlers}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function StampLayerView({
+  layer,
+  stamp,
+  canvasWidth,
+  canvasHeight,
+  onDragEnd,
+}: {
+  layer: StampLayer;
+  stamp: Stamp;
+  canvasWidth: number;
+  canvasHeight: number;
+  onDragEnd: (layerId: string, x: number, y: number) => void;
+}) {
+  const size = Math.round(STAMP_BASE * layer.scale);
+
+  return (
+    <DraggableLayer
+      x={layer.x}
+      y={layer.y}
+      z={layer.z}
+      rotation={layer.rotation}
+      canvasWidth={canvasWidth}
+      canvasHeight={canvasHeight}
+      layerWidth={size}
+      layerHeight={Math.round(size * 1.25)}
+      onDragEnd={(nx, ny) => onDragEnd(layer.id, nx, ny)}
+    >
+      <StampFrame uri={stamp.imageUrl} size={size} />
+    </DraggableLayer>
+  );
+}
+
+function AssetLayerView({
+  layer,
+  canvasWidth,
+  canvasHeight,
+  onDragEnd,
+}: {
+  layer: AssetLayer;
+  canvasWidth: number;
+  canvasHeight: number;
+  onDragEnd: (layerId: string, x: number, y: number) => void;
+}) {
+  const source = ASSET_MAP[layer.assetKey];
+  if (!source) return null;
+
+  const size = Math.round(ASSET_BASE * layer.scale);
+
+  return (
+    <DraggableLayer
+      x={layer.x}
+      y={layer.y}
+      z={layer.z}
+      rotation={layer.rotation}
+      canvasWidth={canvasWidth}
+      canvasHeight={canvasHeight}
+      layerWidth={size}
+      layerHeight={size}
+      onDragEnd={(nx, ny) => onDragEnd(layer.id, nx, ny)}
+    >
+      <Image
+        source={source}
+        style={{ width: size, height: size }}
+        resizeMode="contain"
+      />
+    </DraggableLayer>
+  );
+}
+
+function TextLayerView({
+  layer,
+  canvasWidth,
+  canvasHeight,
+}: {
+  layer: TextLayer;
+  canvasWidth: number;
+  canvasHeight: number;
+}) {
+  const fontOption = FONT_OPTIONS.find((f) => f.key === layer.fontKey);
+  const fontFamily = fontOption?.fontFamily ?? "serif";
+
+  const pxX = layer.x * canvasWidth;
+  const pxY = layer.y * canvasHeight;
+
+  return (
+    <View
+      style={{
+        position: "absolute",
+        left: pxX,
+        top: pxY,
+        zIndex: layer.z,
+        transform: [{ rotate: `${layer.rotation}deg` }],
+      }}
+    >
+      <Text
+        style={{
+          fontFamily,
+          fontSize: layer.fontSize,
+          color: layer.color,
+        }}
+      >
+        {layer.text}
+      </Text>
     </View>
   );
 }
@@ -35,114 +232,112 @@ export default function ProjectCanvas({
   backgroundKey,
   canvas,
   stamps,
+  onStampDragEnd,
+  onAssetDragEnd,
 }: ProjectCanvasProps) {
-  const visibleStamps =
-    canvas.layout === "single"
-      ? stamps.slice(0, 1)
-      : canvas.layout === "two"
-      ? stamps.slice(0, 2)
-      : canvas.layout === "three"
-      ? stamps.slice(0, 3)
-      : stamps.slice(0, 4);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
-  return (
-    <View style={[styles.canvas, backgroundStyles[backgroundKey]]}>
-      {backgroundKey === "grid" ? <GridOverlay /> : null}
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setSize({ width, height });
+  };
 
-      {visibleStamps.length === 0 ? (
+  const stampMap = useMemo(() => {
+    const map = new Map<string, Stamp>();
+    for (const s of stamps) {
+      map.set(s.id, s);
+    }
+    return map;
+  }, [stamps]);
+
+  const bgSource = BACKGROUND_MAP[backgroundKey];
+  const ready = size.width > 0 && size.height > 0;
+
+  const inner = (
+    <>
+      {ready &&
+        canvas.stampLayers.map((layer) => {
+          const stamp = stampMap.get(layer.stampId);
+          if (!stamp) return null;
+          return (
+            <StampLayerView
+              key={layer.id}
+              layer={layer}
+              stamp={stamp}
+              canvasWidth={size.width}
+              canvasHeight={size.height}
+              onDragEnd={onStampDragEnd ?? (() => {})}
+            />
+          );
+        })}
+
+      {ready &&
+        canvas.assetLayers.map((layer) => (
+          <AssetLayerView
+            key={layer.id}
+            layer={layer}
+            canvasWidth={size.width}
+            canvasHeight={size.height}
+            onDragEnd={onAssetDragEnd ?? (() => {})}
+          />
+        ))}
+
+      {ready &&
+        canvas.textLayers.map((layer) => (
+          <TextLayerView
+            key={layer.id}
+            layer={layer}
+            canvasWidth={size.width}
+            canvasHeight={size.height}
+          />
+        ))}
+
+      {stamps.length === 0 && canvas.assetLayers.length === 0 && (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>No stamps in this project yet</Text>
+          <Text style={styles.emptyTitle}>Empty canvas</Text>
           <Text style={styles.emptyText}>
-            Use the image button to add stamps from your collection.
+            Add stamps from your collection to start designing.
           </Text>
         </View>
-      ) : canvas.layout === "single" ? (
-        <View style={styles.singleWrap}>
-          <View style={styles.rot0}>
-            <StampFrame uri={visibleStamps[0].imageUrl} size={180} />
-          </View>
-        </View>
-      ) : canvas.layout === "two" ? (
-        <View style={styles.twoWrap}>
-          {visibleStamps[0] ? (
-            <View style={styles.rotNeg}>
-              <StampFrame uri={visibleStamps[0].imageUrl} size={150} />
-            </View>
-          ) : null}
-
-          {visibleStamps[1] ? (
-            <View style={styles.rotPos}>
-              <StampFrame uri={visibleStamps[1].imageUrl} size={150} />
-            </View>
-          ) : null}
-        </View>
-      ) : canvas.layout === "three" ? (
-        <View style={styles.threeWrap}>
-          {visibleStamps[0] ? (
-            <View style={[styles.absoluteStamp, styles.stampA]}>
-              <View style={styles.rotNeg}>
-                <StampFrame uri={visibleStamps[0].imageUrl} size={130} />
-              </View>
-            </View>
-          ) : null}
-
-          {visibleStamps[1] ? (
-            <View style={[styles.absoluteStamp, styles.stampB]}>
-              <View style={styles.rot0}>
-                <StampFrame uri={visibleStamps[1].imageUrl} size={135} />
-              </View>
-            </View>
-          ) : null}
-
-          {visibleStamps[2] ? (
-            <View style={[styles.absoluteStamp, styles.stampC]}>
-              <View style={styles.rotPos}>
-                <StampFrame uri={visibleStamps[2].imageUrl} size={130} />
-              </View>
-            </View>
-          ) : null}
-        </View>
-      ) : (
-        <View style={styles.gridWrap}>
-          {visibleStamps.map((stamp) => (
-            <View key={stamp.id} style={styles.gridItem}>
-              <StampFrame uri={stamp.imageUrl} size={120} />
-            </View>
-          ))}
-        </View>
       )}
+    </>
+  );
+
+  if (bgSource) {
+    return (
+      <ImageBackground
+        source={bgSource}
+        style={styles.canvas}
+        resizeMode="cover"
+        onLayout={onLayout}
+      >
+        {inner}
+      </ImageBackground>
+    );
+  }
+
+  return (
+    <View style={[styles.canvas, styles.fallbackBg]} onLayout={onLayout}>
+      {inner}
     </View>
   );
 }
 
-const backgroundStyles = StyleSheet.create({
-  paper: {
-    backgroundColor: "#f8f5f1",
-  },
-  "soft-paper": {
-    backgroundColor: "#f1ebe3",
-  },
-  plain: {
-    backgroundColor: "#ffffff",
-  },
-  grid: {
-    backgroundColor: "#f9f6f2",
-  },
-});
-
 const styles = StyleSheet.create({
   canvas: {
-    minHeight: 560,
+    flex: 1,
     borderRadius: 28,
+    overflow: "hidden",
+    position: "relative",
+    minHeight: 400,
+  },
+  fallbackBg: {
+    backgroundColor: "#f8f5f1",
     borderWidth: 1,
     borderColor: "#e5ddd7",
-    overflow: "hidden",
-    padding: 20,
-    position: "relative",
   },
   emptyWrap: {
     flex: 1,
-    minHeight: 520,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
@@ -159,75 +354,5 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#7b746f",
     textAlign: "center",
-  },
-  singleWrap: {
-    minHeight: 520,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  twoWrap: {
-    minHeight: 520,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    gap: 20,
-    paddingTop: 70,
-  },
-  threeWrap: {
-    minHeight: 520,
-    position: "relative",
-  },
-  gridWrap: {
-    minHeight: 520,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 18,
-    paddingTop: 36,
-  },
-  gridItem: {
-    width: 130,
-    alignItems: "center",
-  },
-  absoluteStamp: {
-    position: "absolute",
-  },
-  stampA: {
-    left: 8,
-    top: 80,
-  },
-  stampB: {
-    left: 108,
-    top: 48,
-  },
-  stampC: {
-    right: 8,
-    top: 120,
-  },
-  rotNeg: {
-    transform: [{ rotate: "-8deg" }],
-  },
-  rot0: {
-    transform: [{ rotate: "0deg" }],
-  },
-  rotPos: {
-    transform: [{ rotate: "8deg" }],
-  },
-  gridOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  gridLineVertical: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: "rgba(160,150,140,0.10)",
-  },
-  gridLineHorizontal: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "rgba(160,150,140,0.10)",
   },
 });

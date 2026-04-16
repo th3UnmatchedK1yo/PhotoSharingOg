@@ -1,11 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,10 +13,45 @@ import EditorOptionsSheet from "../../../components/editor/EditorOptionsSheet";
 import ProjectCanvas from "../../../components/editor/ProjectCanvas";
 import { getProject, updateProjectDesign } from "../../../services/projects";
 import type {
+  AssetLayer,
+  FontKey,
   Project,
-  ProjectBackground,
-  ProjectLayout,
+  ProjectCanvasConfig,
+  StampLayer,
+  TextLayer,
 } from "../../../types/project";
+import type { Stamp } from "../../../types/stamp";
+
+function reconcileStampLayers(
+  stamps: Stamp[],
+  existing: StampLayer[],
+): StampLayer[] {
+  const layerByStamp = new Map(existing.map((l) => [l.stampId, l]));
+  const stampIds = new Set(stamps.map((s) => s.id));
+
+  const kept = existing.filter((l) => stampIds.has(l.stampId));
+
+  const added: StampLayer[] = [];
+  stamps.forEach((stamp, idx) => {
+    if (!layerByStamp.has(stamp.id)) {
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
+      added.push({
+        id: `sl-${stamp.id}`,
+        stampId: stamp.id,
+        x: 0.08 + col * 0.42,
+        y: 0.08 + row * 0.28,
+        scale: 1,
+        rotation: 0,
+        z: kept.length + added.length + 1,
+      });
+    }
+  });
+
+  return [...kept, ...added];
+}
+
+type SheetTab = "backgrounds" | "assets" | "text";
 
 export default function ProjectDetailScreen() {
   const router = useRouter();
@@ -26,13 +60,16 @@ export default function ProjectDetailScreen() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"backgrounds" | "layouts">("backgrounds");
+  const [activeTab, setActiveTab] = useState<SheetTab>("backgrounds");
+
+  const didReconcile = useRef(false);
 
   const loadProject = useCallback(async () => {
     if (!id) return;
 
     try {
       setLoading(true);
+      didReconcile.current = false;
       const data = await getProject(id);
       setProject(data);
     } catch (error) {
@@ -46,41 +83,141 @@ export default function ProjectDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       loadProject();
-    }, [loadProject])
+    }, [loadProject]),
   );
 
-  const onChangeBackground = async (backgroundKey: ProjectBackground) => {
-    if (!project) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (!project || didReconcile.current) return;
+      didReconcile.current = true;
 
-    try {
-      setProject((prev) =>
-        prev ? { ...prev, backgroundKey } : prev
+      const reconciled = reconcileStampLayers(
+        project.stamps,
+        project.canvas.stampLayers,
       );
 
+      const changed =
+        reconciled.length !== project.canvas.stampLayers.length ||
+        reconciled.some(
+          (l, i) => l.id !== project.canvas.stampLayers[i]?.id,
+        );
+
+      if (!changed) return;
+
+      const updatedCanvas: ProjectCanvasConfig = {
+        ...project.canvas,
+        stampLayers: reconciled,
+      };
+
+      setProject((prev) => (prev ? { ...prev, canvas: updatedCanvas } : prev));
+
+      updateProjectDesign(project.id, { canvas: updatedCanvas }).catch((err) =>
+        console.log("reconcile save error:", err),
+      );
+    }, [project]),
+  );
+
+  const saveCanvas = async (canvas: ProjectCanvasConfig) => {
+    if (!project) return;
+
+    setProject((prev) => (prev ? { ...prev, canvas } : prev));
+
+    try {
+      await updateProjectDesign(project.id, { canvas });
+    } catch (error) {
+      console.log("saveCanvas error:", error);
+    }
+  };
+
+  const onStampDragEnd = (layerId: string, x: number, y: number) => {
+    if (!project) return;
+
+    const stampLayers = project.canvas.stampLayers.map((l) =>
+      l.id === layerId ? { ...l, x, y } : l,
+    );
+
+    saveCanvas({ ...project.canvas, stampLayers });
+  };
+
+  const onAssetDragEnd = (layerId: string, x: number, y: number) => {
+    if (!project) return;
+
+    const assetLayers = project.canvas.assetLayers.map((l) =>
+      l.id === layerId ? { ...l, x, y } : l,
+    );
+
+    saveCanvas({ ...project.canvas, assetLayers });
+  };
+
+  const onChangeBackground = async (backgroundKey: string) => {
+    if (!project) return;
+
+    setProject((prev) => (prev ? { ...prev, backgroundKey } : prev));
+
+    try {
       await updateProjectDesign(project.id, { backgroundKey });
     } catch (error) {
-      console.log("updateProjectDesign background error:", error);
-      Alert.alert("Error", "Failed to update background.");
+      console.log("background save error:", error);
       loadProject();
     }
   };
 
-  const onChangeLayout = async (layout: ProjectLayout) => {
+  const onAddAsset = (assetKey: string) => {
     if (!project) return;
 
-    try {
-      const canvas = { ...project.canvas, layout };
+    const maxZ = Math.max(
+      0,
+      ...project.canvas.stampLayers.map((l) => l.z),
+      ...project.canvas.assetLayers.map((l) => l.z),
+      ...project.canvas.textLayers.map((l) => l.z),
+    );
 
-      setProject((prev) =>
-        prev ? { ...prev, canvas } : prev
-      );
+    const newLayer: AssetLayer = {
+      id: `al-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      assetKey,
+      x: 0.25 + Math.random() * 0.25,
+      y: 0.25 + Math.random() * 0.25,
+      scale: 1,
+      rotation: 0,
+      z: maxZ + 1,
+    };
 
-      await updateProjectDesign(project.id, { canvas });
-    } catch (error) {
-      console.log("updateProjectDesign layout error:", error);
-      Alert.alert("Error", "Failed to update layout.");
-      loadProject();
-    }
+    const updatedCanvas: ProjectCanvasConfig = {
+      ...project.canvas,
+      assetLayers: [...project.canvas.assetLayers, newLayer],
+    };
+
+    saveCanvas(updatedCanvas);
+  };
+
+  const onAddText = (fontKey: FontKey) => {
+    if (!project) return;
+
+    const maxZ = Math.max(
+      0,
+      ...project.canvas.stampLayers.map((l) => l.z),
+      ...project.canvas.assetLayers.map((l) => l.z),
+      ...project.canvas.textLayers.map((l) => l.z),
+    );
+
+    const newLayer: TextLayer = {
+      id: `tl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      text: "Your text",
+      fontKey,
+      fontSize: 24,
+      color: "#4f4a47",
+      x: 0.15,
+      y: 0.06,
+      rotation: 0,
+      z: maxZ + 1,
+    };
+
+    const updatedCanvas: ProjectCanvasConfig = {
+      ...project.canvas,
+      textLayers: [...project.canvas.textLayers, newLayer],
+    };
+
+    saveCanvas(updatedCanvas);
   };
 
   if (loading) {
@@ -110,37 +247,60 @@ export default function ProjectDetailScreen() {
           {project.name}
         </Text>
 
-        <View style={styles.headerActions}>
-          <Pressable
-            style={styles.circleButton}
-            onPress={() => router.push(`/editor/select-stamps?projectId=${project.id}`)}
-          >
-            <Ionicons name="images-outline" size={22} color="#5f5a56" />
-          </Pressable>
-
-          <Pressable
-            style={styles.circleButton}
-            onPress={() => {
-              setActiveTab("backgrounds");
-              setSheetOpen(true);
-            }}
-          >
-            <Ionicons name="options-outline" size={22} color="#5f5a56" />
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.circleButton}
+          onPress={() =>
+            router.push(`/editor/select-stamps?projectId=${project.id}`)
+          }
+        >
+          <Ionicons name="images-outline" size={22} color="#5f5a56" />
+        </Pressable>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.canvasWrap}>
         <ProjectCanvas
           backgroundKey={project.backgroundKey}
           canvas={project.canvas}
           stamps={project.stamps}
+          onStampDragEnd={onStampDragEnd}
+          onAssetDragEnd={onAssetDragEnd}
         />
-      </ScrollView>
+      </View>
+
+      <View style={styles.toolbar}>
+        <Pressable
+          style={styles.toolBtn}
+          onPress={() => {
+            setActiveTab("backgrounds");
+            setSheetOpen(true);
+          }}
+        >
+          <Ionicons name="image-outline" size={22} color="#5f5a56" />
+          <Text style={styles.toolLabel}>BG</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.toolBtn}
+          onPress={() => {
+            setActiveTab("assets");
+            setSheetOpen(true);
+          }}
+        >
+          <Ionicons name="sparkles-outline" size={22} color="#5f5a56" />
+          <Text style={styles.toolLabel}>Assets</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.toolBtn}
+          onPress={() => {
+            setActiveTab("text");
+            setSheetOpen(true);
+          }}
+        >
+          <Ionicons name="text-outline" size={22} color="#5f5a56" />
+          <Text style={styles.toolLabel}>Text</Text>
+        </Pressable>
+      </View>
 
       <EditorOptionsSheet
         visible={sheetOpen}
@@ -148,9 +308,9 @@ export default function ProjectDetailScreen() {
         onClose={() => setSheetOpen(false)}
         onChangeTab={setActiveTab}
         selectedBackground={project.backgroundKey}
-        selectedLayout={project.canvas.layout}
         onSelectBackground={onChangeBackground}
-        onSelectLayout={onChangeLayout}
+        onAddAsset={onAddAsset}
+        onAddText={onAddText}
       />
     </View>
   );
@@ -164,15 +324,15 @@ const styles = StyleSheet.create({
   headerRow: {
     paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 12,
+    paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
   circleButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "#fbf8f5",
     borderWidth: 1,
     borderColor: "#e5ddd7",
@@ -182,20 +342,36 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     textAlign: "center",
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     color: "#4f4a47",
   },
-  headerActions: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  scroll: {
+  canvasWrap: {
     flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  toolbar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    paddingVertical: 12,
+    paddingBottom: 28,
+    borderTopWidth: 1,
+    borderTopColor: "#e5ddd7",
+    backgroundColor: "#fbf8f5",
+  },
+  toolBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 64,
+    paddingVertical: 6,
+  },
+  toolLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#5f5a56",
   },
   center: {
     flex: 1,

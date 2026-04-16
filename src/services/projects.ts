@@ -1,7 +1,6 @@
 import { supabase } from "../lib/supabase";
 import type {
   Project,
-  ProjectBackground,
   ProjectCanvasConfig,
   ProjectSummary,
 } from "../types/project";
@@ -42,33 +41,28 @@ function mapStamp(row: StampRow): Stamp {
   };
 }
 
-function parseBackgroundKey(value: string | null | undefined): ProjectBackground {
-  if (
-    value === "paper" ||
-    value === "soft-paper" ||
-    value === "plain" ||
-    value === "grid"
-  ) {
-    return value;
-  }
-
-  return "paper";
+function parseBackgroundKey(value: string | null | undefined): string {
+  return value || "bg1";
 }
 
-function parseCanvasConfig(value: unknown): ProjectCanvasConfig {
-  const raw = value as { layout?: unknown } | null | undefined;
-  const layout = raw?.layout;
+const EMPTY_CANVAS: ProjectCanvasConfig = {
+  stampLayers: [],
+  assetLayers: [],
+  textLayers: [],
+};
 
-  if (
-    layout === "single" ||
-    layout === "two" ||
-    layout === "three" ||
-    layout === "grid"
-  ) {
-    return { layout };
+function parseCanvasConfig(value: unknown): ProjectCanvasConfig {
+  if (!value || typeof value !== "object") {
+    return { ...EMPTY_CANVAS };
   }
 
-  return { layout: "two" };
+  const raw = value as Record<string, unknown>;
+
+  return {
+    stampLayers: Array.isArray(raw.stampLayers) ? raw.stampLayers : [],
+    assetLayers: Array.isArray(raw.assetLayers) ? raw.assetLayers : [],
+    textLayers: Array.isArray(raw.textLayers) ? raw.textLayers : [],
+  };
 }
 
 function mapProject(row: ProjectRow, stamps: Stamp[]): Project {
@@ -127,8 +121,8 @@ export async function createProject(userId: string, name: string) {
       user_id: userId,
       name: trimmed,
       status: "draft",
-      background_key: "paper",
-      canvas_json: { layout: "two" },
+      background_key: "bg1",
+      canvas_json: { stampLayers: [], assetLayers: [], textLayers: [] },
     })
     .select("*")
     .single();
@@ -238,7 +232,7 @@ export async function saveProjectStamps(projectId: string, stampIds: string[]) {
 export async function updateProjectDesign(
   projectId: string,
   payload: {
-    backgroundKey?: ProjectBackground;
+    backgroundKey?: string;
     canvas?: ProjectCanvasConfig;
   }
 ) {

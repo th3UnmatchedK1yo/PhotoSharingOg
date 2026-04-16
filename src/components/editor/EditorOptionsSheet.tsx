@@ -1,35 +1,23 @@
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import type {
-  ProjectBackground,
-  ProjectLayout,
-} from "../../types/project";
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ASSET_SECTIONS,
+  BACKGROUND_OPTIONS,
+  FONT_OPTIONS,
+} from "../../constants/editorCatalog";
+import type { FontKey } from "../../types/project";
 
-type TabKey = "backgrounds" | "layouts";
+type TabKey = "backgrounds" | "assets" | "text";
 
 type EditorOptionsSheetProps = {
   visible: boolean;
   activeTab: TabKey;
   onClose: () => void;
   onChangeTab: (tab: TabKey) => void;
-  selectedBackground: ProjectBackground;
-  selectedLayout: ProjectLayout;
-  onSelectBackground: (value: ProjectBackground) => void;
-  onSelectLayout: (value: ProjectLayout) => void;
+  selectedBackground: string;
+  onSelectBackground: (key: string) => void;
+  onAddAsset: (assetKey: string) => void;
+  onAddText: (fontKey: FontKey) => void;
 };
-
-const BACKGROUNDS: Array<{ key: ProjectBackground; label: string }> = [
-  { key: "paper", label: "Paper" },
-  { key: "soft-paper", label: "Soft Paper" },
-  { key: "plain", label: "Plain" },
-  { key: "grid", label: "Grid" },
-];
-
-const LAYOUTS: Array<{ key: ProjectLayout; label: string }> = [
-  { key: "single", label: "Single" },
-  { key: "two", label: "Two" },
-  { key: "three", label: "Three" },
-  { key: "grid", label: "Grid" },
-];
 
 export default function EditorOptionsSheet({
   visible,
@@ -37,9 +25,9 @@ export default function EditorOptionsSheet({
   onClose,
   onChangeTab,
   selectedBackground,
-  selectedLayout,
   onSelectBackground,
-  onSelectLayout,
+  onAddAsset,
+  onAddText,
 }: EditorOptionsSheetProps) {
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -50,94 +38,105 @@ export default function EditorOptionsSheet({
               <Text style={styles.doneText}>Done</Text>
             </Pressable>
 
-            <Text style={styles.title}>Edit Project</Text>
+            <Text style={styles.title}>Edit Canvas</Text>
 
             <View style={styles.doneButtonPlaceholder} />
           </View>
 
           <View style={styles.segmented}>
-            <Pressable
-              style={[styles.segmentItem, activeTab === "backgrounds" && styles.segmentActive]}
-              onPress={() => onChangeTab("backgrounds")}
-            >
-              <Text
-                style={[
-                  styles.segmentText,
-                  activeTab === "backgrounds" && styles.segmentTextActive,
-                ]}
+            {(["backgrounds", "assets", "text"] as const).map((tab) => (
+              <Pressable
+                key={tab}
+                style={[styles.segmentItem, activeTab === tab && styles.segmentActive]}
+                onPress={() => onChangeTab(tab)}
               >
-                Backgrounds
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.segmentItem, activeTab === "layouts" && styles.segmentActive]}
-              onPress={() => onChangeTab("layouts")}
-            >
-              <Text
-                style={[
-                  styles.segmentText,
-                  activeTab === "layouts" && styles.segmentTextActive,
-                ]}
-              >
-                Layouts
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    styles.segmentText,
+                    activeTab === tab && styles.segmentTextActive,
+                  ]}
+                >
+                  {tab === "backgrounds" ? "BG" : tab === "assets" ? "Assets" : "Text"}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
-          {activeTab === "backgrounds" ? (
-            <View>
-              <Text style={styles.sectionTitle}>Project Background</Text>
-
-              <View style={styles.optionGrid}>
-                {BACKGROUNDS.map((item) => {
-                  const active = selectedBackground === item.key;
-
-                  return (
-                    <Pressable
-                      key={item.key}
-                      style={[styles.optionCard, active && styles.optionCardActive]}
-                      onPress={() => onSelectBackground(item.key)}
-                    >
-                      <View
-                        style={[
-                          styles.backgroundPreview,
-                          item.key === "paper" && styles.bgPaper,
-                          item.key === "soft-paper" && styles.bgSoftPaper,
-                          item.key === "plain" && styles.bgPlain,
-                          item.key === "grid" && styles.bgGrid,
-                        ]}
-                      />
-                      <Text style={styles.optionLabel}>{item.label}</Text>
-                    </Pressable>
-                  );
-                })}
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {activeTab === "backgrounds" && (
+              <View>
+                <Text style={styles.sectionTitle}>Backgrounds</Text>
+                <View style={styles.optionGrid}>
+                  {BACKGROUND_OPTIONS.map((item) => {
+                    const active = selectedBackground === item.key;
+                    return (
+                      <Pressable
+                        key={item.key}
+                        style={[styles.optionCard, active && styles.optionCardActive]}
+                        onPress={() => onSelectBackground(item.key)}
+                      >
+                        <Image
+                          source={item.source}
+                          style={styles.bgPreview}
+                          resizeMode="cover"
+                        />
+                        <Text style={styles.optionLabel}>{item.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
-          ) : (
-            <View>
-              <Text style={styles.sectionTitle}>Canvas Layout</Text>
+            )}
 
-              <View style={styles.optionGrid}>
-                {LAYOUTS.map((item) => {
-                  const active = selectedLayout === item.key;
+            {activeTab === "assets" &&
+              ASSET_SECTIONS.map((section) => (
+                <View key={section.title} style={styles.assetSection}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  <View style={styles.assetGrid}>
+                    {section.items.map((item) => (
+                      <Pressable
+                        key={item.key}
+                        style={styles.assetCard}
+                        onPress={() => onAddAsset(item.key)}
+                      >
+                        <Image
+                          source={item.source}
+                          style={styles.assetPreview}
+                          resizeMode="contain"
+                        />
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ))}
 
-                  return (
-                    <Pressable
-                      key={item.key}
-                      style={[styles.optionCard, active && styles.optionCardActive]}
-                      onPress={() => onSelectLayout(item.key)}
+            {activeTab === "text" && (
+              <View>
+                <Text style={styles.sectionTitle}>Add Text</Text>
+                {FONT_OPTIONS.map((font) => (
+                  <Pressable
+                    key={font.key}
+                    style={styles.fontCard}
+                    onPress={() => onAddText(font.key)}
+                  >
+                    <Text
+                      style={[
+                        styles.fontPreview,
+                        { fontFamily: font.fontFamily },
+                      ]}
                     >
-                      <View style={styles.layoutPreview}>
-                        <Text style={styles.layoutPreviewText}>{item.label}</Text>
-                      </View>
-                      <Text style={styles.optionLabel}>{item.label}</Text>
-                    </Pressable>
-                  );
-                })}
+                      {font.label}
+                    </Text>
+                    <Text style={styles.fontAction}>+ Add</Text>
+                  </Pressable>
+                ))}
               </View>
-            </View>
-          )}
+            )}
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -157,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 28,
-    minHeight: 420,
+    maxHeight: "70%",
   },
   headerRow: {
     flexDirection: "row",
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
     color: "#5f5a56",
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
     color: "#111",
   },
@@ -194,11 +193,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#e8e2dd",
     borderRadius: 999,
     padding: 4,
-    marginBottom: 22,
+    marginBottom: 18,
   },
   segmentItem: {
     flex: 1,
-    minHeight: 46,
+    minHeight: 42,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
@@ -207,12 +206,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   segmentText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#6d6661",
   },
   segmentTextActive: {
     color: "#1f1b19",
+  },
+  scrollArea: {
+    flexGrow: 0,
+  },
+  scrollContent: {
+    paddingBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
@@ -222,56 +227,72 @@ const styles = StyleSheet.create({
   optionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 14,
+    gap: 12,
   },
   optionCard: {
     width: "47%",
     backgroundColor: "#fbf8f5",
-    borderRadius: 20,
-    padding: 12,
-    borderWidth: 1,
+    borderRadius: 18,
+    padding: 10,
+    borderWidth: 2,
     borderColor: "#e5ddd7",
   },
   optionCardActive: {
     borderColor: "#7f7670",
   },
-  backgroundPreview: {
-    height: 94,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#ddd5cf",
-    marginBottom: 10,
-  },
-  bgPaper: {
-    backgroundColor: "#f8f5f1",
-  },
-  bgSoftPaper: {
-    backgroundColor: "#f1ebe3",
-  },
-  bgPlain: {
-    backgroundColor: "#ffffff",
-  },
-  bgGrid: {
-    backgroundColor: "#f9f6f2",
-  },
-  layoutPreview: {
-    height: 94,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#ddd5cf",
-    marginBottom: 10,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  layoutPreviewText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#5f5a56",
+  bgPreview: {
+    height: 90,
+    borderRadius: 14,
+    marginBottom: 8,
+    backgroundColor: "#ddd5cf",
   },
   optionLabel: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "600",
     color: "#4f4a47",
+  },
+  assetSection: {
+    marginBottom: 20,
+  },
+  assetGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  assetCard: {
+    width: 72,
+    height: 72,
+    borderRadius: 14,
+    backgroundColor: "#fbf8f5",
+    borderWidth: 1,
+    borderColor: "#e5ddd7",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 6,
+  },
+  assetPreview: {
+    width: 56,
+    height: 56,
+  },
+  fontCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fbf8f5",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#e5ddd7",
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    marginBottom: 12,
+  },
+  fontPreview: {
+    fontSize: 22,
+    color: "#4f4a47",
+  },
+  fontAction: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#5f5a56",
   },
 });

@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
+import StampFrame from "../../../components/stamp/StampFrame";
 import { useAuth } from "../../../providers/AuthProvider";
 import { createProject, deleteProject, getProjects } from "../../../services/projects";
 import type { ProjectSummary } from "../../../types/project";
@@ -116,9 +117,7 @@ export default function EditorScreen() {
             projects.map((project) => (
               <View key={project.id} style={styles.projectCard}>
                 <View style={styles.projectTopRow}>
-                  <View>
-                    <Text style={styles.projectStatus}>Active</Text>
-                  </View>
+                  <Text style={styles.projectStatus}>Active</Text>
 
                   <View style={styles.projectActions}>
                     <Text style={styles.projectCount}>{project.stampCount}</Text>
@@ -143,23 +142,17 @@ export default function EditorScreen() {
                 <Text style={styles.projectMeta}>{project.stampCount} stamps</Text>
 
                 <View style={styles.previewBox}>
-                  <View style={styles.previewRow}>
-                    {project.previewImages.length === 0 ? (
-                      <Text style={styles.previewPlaceholder}>No stamps selected yet</Text>
-                    ) : (
-                      project.previewImages.map((imageUrl, index) => (
-                        <View key={`${project.id}-${index}`} style={styles.previewStamp}>
-                          <View style={styles.previewStampInner}>
-                            <View style={styles.previewImageWrap}>
-                              <Text numberOfLines={1} style={styles.previewUrlHidden}>
-                                {imageUrl}
-                              </Text>
-                            </View>
-                          </View>
+                  {project.previewImages.length === 0 ? (
+                    <Text style={styles.previewPlaceholder}>No stamps selected yet</Text>
+                  ) : (
+                    <View style={styles.previewRow}>
+                      {project.previewImages.slice(0, 3).map((imageUrl, index) => (
+                        <View key={`${project.id}-${index}`} style={styles.previewThumb}>
+                          <StampFrame uri={imageUrl} size={82} />
                         </View>
-                      ))
-                    )}
-                  </View>
+                      ))}
+                    </View>
+                  )}
                 </View>
               </View>
             ))
@@ -332,37 +325,17 @@ const styles = StyleSheet.create({
     borderColor: "#e5ddd7",
     backgroundColor: "#fff",
     padding: 14,
-    minHeight: 140,
+    minHeight: 130,
     justifyContent: "center",
+    overflow: "hidden",
   },
   previewRow: {
     flexDirection: "row",
     gap: 12,
-  },
-  previewStamp: {
-    width: 92,
-    height: 110,
-    borderRadius: 18,
-    backgroundColor: "#f7f3ef",
-    padding: 8,
-  },
-  previewStampInner: {
-    flex: 1,
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-    justifyContent: "center",
     alignItems: "center",
   },
-  previewImageWrap: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  previewUrlHidden: {
-    fontSize: 1,
-    color: "transparent",
+  previewThumb: {
+    flexShrink: 0,
   },
   previewPlaceholder: {
     fontSize: 15,
