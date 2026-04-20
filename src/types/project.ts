@@ -30,6 +30,7 @@ export type TextLayer = {
   color: string;
   x: number;
   y: number;
+  scale: number;
   rotation: number;
   z: number;
 };

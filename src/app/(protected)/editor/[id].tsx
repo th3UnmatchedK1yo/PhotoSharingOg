@@ -24,6 +24,13 @@ import type { Stamp } from "../../../types/stamp";
 
 const BACKGROUND_LAYER_ID = "__paper_background_layer__";
 
+type LayerTransform = {
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+};
+
 function reconcileStampLayers(
   stamps: Stamp[],
   existing: StampLayer[],
@@ -226,7 +233,7 @@ export default function ProjectDetailScreen() {
         }).catch((error) => {
           console.log("debounced canvas save error:", error);
         });
-      }, 300);
+      }, 180);
     },
     [project],
   );
@@ -283,35 +290,35 @@ export default function ProjectDetailScreen() {
     queueCanvasPersist(canvas, options?.backgroundKey);
   };
 
-  const onStampDragEnd = (layerId: string, x: number, y: number) => {
+  const onStampTransformEnd = (layerId: string, next: LayerTransform) => {
     if (!project) return;
 
     const stampLayers = project.canvas.stampLayers.map((layer) =>
-      layer.id === layerId ? { ...layer, x, y } : layer,
+      layer.id === layerId ? { ...layer, ...next } : layer,
     );
 
-    saveCanvas({ ...project.canvas, stampLayers });
+    updateCanvasLocally({ ...project.canvas, stampLayers });
   };
 
-  const onAssetDragEnd = (layerId: string, x: number, y: number) => {
+  const onAssetTransformEnd = (layerId: string, next: LayerTransform) => {
     if (!project) return;
 
     const assetLayers = project.canvas.assetLayers.map((layer) =>
-      layer.id === layerId ? { ...layer, x, y } : layer,
+      layer.id === layerId ? { ...layer, ...next } : layer,
     );
 
-    saveCanvas({ ...project.canvas, assetLayers });
+    updateCanvasLocally({ ...project.canvas, assetLayers });
   };
 
-  const onTextDragEnd = (layerId: string, x: number, y: number) => {
+  const onTextTransformEnd = (layerId: string, next: LayerTransform) => {
     if (!project) return;
 
     const textLayers = project.canvas.textLayers.map((layer) =>
-      layer.id === layerId ? { ...layer, x, y } : layer,
+      layer.id === layerId ? { ...layer, ...next } : layer,
     );
 
     setSelectedTextLayerId(layerId);
-    saveCanvas({ ...project.canvas, textLayers });
+    updateCanvasLocally({ ...project.canvas, textLayers });
   };
 
   const onChangeBackground = (backgroundKey: string) => {
@@ -364,6 +371,7 @@ export default function ProjectDetailScreen() {
       color: "#4f4a47",
       x: 0.15,
       y: 0.06,
+      scale: 1,
       rotation: 0,
       z: getMaxZ(project.canvas) + 1,
     };
@@ -384,6 +392,7 @@ export default function ProjectDetailScreen() {
   const onTextPress = (layerId: string) => {
     setSelectedTextLayerId(layerId);
     setActiveTab("text");
+    setSheetOpen(true);
   };
 
   const onChangeSelectedText = (text: string) => {
@@ -462,9 +471,9 @@ export default function ProjectDetailScreen() {
         <ProjectCanvas
           canvas={project.canvas}
           stamps={project.stamps}
-          onStampDragEnd={onStampDragEnd}
-          onAssetDragEnd={onAssetDragEnd}
-          onTextDragEnd={onTextDragEnd}
+          onStampTransformEnd={onStampTransformEnd}
+          onAssetTransformEnd={onAssetTransformEnd}
+          onTextTransformEnd={onTextTransformEnd}
           onTextPress={onTextPress}
           selectedTextLayerId={selectedTextLayerId}
         />

@@ -58,10 +58,17 @@ function parseCanvasConfig(value: unknown): ProjectCanvasConfig {
 
   const raw = value as Record<string, unknown>;
 
+  const rawTextLayers = Array.isArray(raw.textLayers) ? raw.textLayers : [];
+  for (const tl of rawTextLayers) {
+    if (tl && typeof tl === "object" && !("scale" in tl)) {
+      (tl as Record<string, unknown>).scale = 1;
+    }
+  }
+
   return {
     stampLayers: Array.isArray(raw.stampLayers) ? raw.stampLayers : [],
     assetLayers: Array.isArray(raw.assetLayers) ? raw.assetLayers : [],
-    textLayers: Array.isArray(raw.textLayers) ? raw.textLayers : [],
+    textLayers: rawTextLayers as ProjectCanvasConfig["textLayers"],
   };
 }
 

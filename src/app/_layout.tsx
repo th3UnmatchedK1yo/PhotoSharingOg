@@ -1,6 +1,7 @@
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../../global.css";
 import { AuthProvider } from "../providers/AuthProvider";
 
@@ -11,15 +12,24 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f5f1ed" }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f5f1ed",
+        }}
+      >
         <ActivityIndicator />
       </View>
     );
   }
 
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

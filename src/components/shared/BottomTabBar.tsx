@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-type TabKey = "stamp" | "book" | "editor" | "calendar";
+type TabKey = "stamp" | "book" | "editor" | "calendar" | "friends";
 
 type BottomTabBarProps = {
   active: TabKey;
@@ -18,6 +18,7 @@ const TABS: Array<{
   { key: "book", label: "Collection", icon: "book", route: "/book" },
   { key: "editor", label: "Editor", icon: "color-palette", route: "/editor" },
   { key: "calendar", label: "Calendar", icon: "calendar", route: "/calendar" },
+  { key: "friends", label: "Friends", icon: "people", route: "/friends" },
 ];
 
 export default function BottomTabBar({ active }: BottomTabBarProps) {
@@ -41,7 +42,7 @@ export default function BottomTabBar({ active }: BottomTabBarProps) {
             >
               <Ionicons
                 name={tab.icon}
-                size={24}
+                size={22}
                 color={isActive ? "#1f1b19" : "#7a736e"}
               />
               <Text style={[styles.label, isActive && styles.labelActive]}>

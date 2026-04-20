@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import BottomTabBar from "../../../components/shared/BottomTabBar";
 import StampFrame from "../../../components/stamp/StampFrame";
 import { useAuth } from "../../../providers/AuthProvider";
 import { createProject, deleteProject, getProjects } from "../../../services/projects";
+import { getSharedFeed, shareProject, unshareProject } from "../../../services/social";
 import type { ProjectSummary } from "../../../types/project";
 
 export default function EditorScreen() {
@@ -28,15 +29,29 @@ export default function EditorScreen() {
   const [projectName, setProjectName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const [sharedProjectIds, setSharedProjectIds] = useState<string[]>([]);
+  const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
+
   const loadProjects = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      const data = await getProjects(user.id);
-      setProjects(data);
+
+      const [projectData, sharedFeed] = await Promise.all([
+        getProjects(user.id),
+        getSharedFeed(),
+      ]);
+
+      setProjects(projectData);
+
+      const mySharedIds = sharedFeed
+        .filter((item) => item.ownerId === user.id)
+        .map((item) => item.projectId);
+
+      setSharedProjectIds(mySharedIds);
     } catch (error) {
-      console.log("getProjects error:", error);
+      console.log("getProjects/getSharedFeed error:", error);
       Alert.alert("Error", "Failed to load projects.");
     } finally {
       setLoading(false);
@@ -46,15 +61,23 @@ export default function EditorScreen() {
   useFocusEffect(
     useCallback(() => {
       loadProjects();
-    }, [loadProjects])
+    }, [loadProjects]),
   );
+
+  const sharedSet = useMemo(() => new Set(sharedProjectIds), [sharedProjectIds]);
 
   const onCreateProject = async () => {
     if (!user || creating) return;
 
+    const trimmed = projectName.trim();
+    if (!trimmed) {
+      Alert.alert("Missing name", "Please enter a project name.");
+      return;
+    }
+
     try {
       setCreating(true);
-      const created = await createProject(user.id, projectName);
+      const created = await createProject(user.id, trimmed);
       setCreateOpen(false);
       setProjectName("");
       router.push(`/editor/${created.id}`);
@@ -74,6 +97,7 @@ export default function EditorScreen() {
         onPress: async () => {
           try {
             await deleteProject(projectId);
+            setSharedProjectIds((prev) => prev.filter((id) => id !== projectId));
             loadProjects();
           } catch (error) {
             console.log("deleteProject error:", error);
@@ -84,14 +108,63 @@ export default function EditorScreen() {
     ]);
   };
 
+  const onToggleShareProject = async (project: ProjectSummary) => {
+    if (!user || sharingProjectId) return;
+
+    const isShared = sharedSet.has(project.id);
+
+    try {
+      setSharingProjectId(project.id);
+
+      if (isShared) {
+        await unshareProject(project.id);
+        setSharedProjectIds((prev) => prev.filter((id) => id !== project.id));
+      } else {
+        await shareProject(
+          user.id,
+          project.id,
+          `${project.name} · ${project.stampCount} stamp${project.stampCount === 1 ? "" : "s"}`,
+        );
+        setSharedProjectIds((prev) =>
+          prev.includes(project.id) ? prev : [...prev, project.id],
+        );
+      }
+    } catch (error) {
+      console.log("toggle share project error:", error);
+      Alert.alert(
+        "Error",
+        isShared ? "Failed to unshare project." : "Failed to share project.",
+      );
+    } finally {
+      setSharingProjectId(null);
+    }
+  };
+
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Editor</Text>
+        <View>
+          <Text style={styles.title}>Editor</Text>
+          <Text style={styles.subtitle}>
+            Build scrapbook projects and choose which ones your friends can see.
+          </Text>
+        </View>
 
-        <Pressable style={styles.plusButton} onPress={() => setCreateOpen(true)}>
-          <Ionicons name="add" size={24} color="#5f5a56" />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.headerCircle}
+            onPress={() => router.push("/friends")}
+          >
+            <Ionicons name="people-outline" size={22} color="#5f5a56" />
+          </Pressable>
+
+          <Pressable
+            style={styles.headerCircle}
+            onPress={() => setCreateOpen(true)}
+          >
+            <Ionicons name="add" size={24} color="#5f5a56" />
+          </Pressable>
+        </View>
       </View>
 
       {loading ? (
@@ -114,48 +187,96 @@ export default function EditorScreen() {
               </Text>
             </View>
           ) : (
-            projects.map((project) => (
-              <View key={project.id} style={styles.projectCard}>
-                <View style={styles.projectTopRow}>
-                  <Text style={styles.projectStatus}>Active</Text>
+            projects.map((project) => {
+              const isShared = sharedSet.has(project.id);
+              const isUpdatingShare = sharingProjectId === project.id;
 
-                  <View style={styles.projectActions}>
-                    <Text style={styles.projectCount}>{project.stampCount}</Text>
+              return (
+                <View key={project.id} style={styles.projectCard}>
+                  <View style={styles.projectTopRow}>
+                    <View style={styles.projectStatusWrap}>
+                      <Text style={styles.projectStatus}>Active</Text>
+                      {isShared && (
+                        <View style={styles.sharedPill}>
+                          <Ionicons name="people" size={12} color="#5f5a56" />
+                          <Text style={styles.sharedPillText}>Shared</Text>
+                        </View>
+                      )}
+                    </View>
 
-                    <Pressable
-                      style={styles.cardAction}
-                      onPress={() => onDeleteProject(project.id)}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#7b746f" />
-                    </Pressable>
+                    <View style={styles.projectActions}>
+                      <Text style={styles.projectCount}>{project.stampCount}</Text>
 
-                    <Pressable
-                      style={styles.cardAction}
-                      onPress={() => router.push(`/editor/${project.id}`)}
-                    >
-                      <Ionicons name="arrow-forward" size={18} color="#7b746f" />
-                    </Pressable>
+                      <Pressable
+                        style={[
+                          styles.cardAction,
+                          isShared && styles.cardActionShared,
+                        ]}
+                        onPress={() => onToggleShareProject(project)}
+                        disabled={isUpdatingShare}
+                      >
+                        <Ionicons
+                          name={isShared ? "people" : "people-outline"}
+                          size={18}
+                          color="#7b746f"
+                        />
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.cardAction}
+                        onPress={() => onDeleteProject(project.id)}
+                      >
+                        <Ionicons name="trash-outline" size={18} color="#7b746f" />
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.cardAction}
+                        onPress={() => router.push(`/editor/${project.id}`)}
+                      >
+                        <Ionicons name="arrow-forward" size={18} color="#7b746f" />
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={styles.projectName}>{project.name}</Text>
+                  <Text style={styles.projectMeta}>
+                    {project.stampCount} stamps
+                    {isUpdatingShare
+                      ? " · Saving..."
+                      : isShared
+                        ? " · Visible to friends"
+                        : " · Private"}
+                  </Text>
+
+                  <View style={styles.previewBox}>
+                    {project.previewImages.length === 0 ? (
+                      <Text style={styles.previewPlaceholder}>No stamps selected yet</Text>
+                    ) : (
+                      <View style={styles.previewRow}>
+                        {project.previewImages.slice(0, 3).map((imageUrl, index) => (
+                          <View key={`${project.id}-${index}`} style={styles.previewThumb}>
+                            <StampFrame uri={imageUrl} size={82} />
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.shareRow}>
+                    <Ionicons
+                      name={isShared ? "lock-closed" : "lock-closed-outline"}
+                      size={15}
+                      color="#847b75"
+                    />
+                    <Text style={styles.shareRowText}>
+                      {isShared
+                        ? "Shared only with accepted friends in your app."
+                        : "This project is private to you."}
+                    </Text>
                   </View>
                 </View>
-
-                <Text style={styles.projectName}>{project.name}</Text>
-                <Text style={styles.projectMeta}>{project.stampCount} stamps</Text>
-
-                <View style={styles.previewBox}>
-                  {project.previewImages.length === 0 ? (
-                    <Text style={styles.previewPlaceholder}>No stamps selected yet</Text>
-                  ) : (
-                    <View style={styles.previewRow}>
-                      {project.previewImages.slice(0, 3).map((imageUrl, index) => (
-                        <View key={`${project.id}-${index}`} style={styles.previewThumb}>
-                          <StampFrame uri={imageUrl} size={82} />
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -218,13 +339,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 12,
   },
   title: {
     fontSize: 42,
     fontWeight: "700",
     color: "#4f4a47",
   },
-  plusButton: {
+  subtitle: {
+    marginTop: 6,
+    maxWidth: 250,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#7b746f",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerCircle: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -282,10 +416,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
+  },
+  projectStatusWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
   },
   projectStatus: {
     fontSize: 14,
     color: "#8c8682",
+  },
+  sharedPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#ede7e3",
+  },
+  sharedPillText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#5f5a56",
   },
   projectActions: {
     flexDirection: "row",
@@ -306,6 +461,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  cardActionShared: {
+    backgroundColor: "#ece7e3",
   },
   projectName: {
     fontSize: 28,
@@ -340,6 +498,18 @@ const styles = StyleSheet.create({
   previewPlaceholder: {
     fontSize: 15,
     color: "#8c8682",
+  },
+  shareRow: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  shareRowText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#847b75",
   },
   modalBackdrop: {
     flex: 1,
