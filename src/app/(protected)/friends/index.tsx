@@ -1,4 +1,5 @@
-import { useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -93,6 +94,7 @@ function ProfileAvatar({
 }
 
 export default function FriendsScreen() {
+  const router = useRouter();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -452,7 +454,11 @@ export default function FriendsScreen() {
             </Text>
           ) : (
             feedItems.map((item) => (
-              <View key={item.id} style={styles.feedCard}>
+              <Pressable
+                key={item.id}
+                style={styles.feedCard}
+                onPress={() => router.push(`/friends/shared/${item.id}`)}
+              >
                 <View style={styles.feedHeader}>
                   <ProfileAvatar profile={item.owner} size={44} />
                   <View style={styles.feedHeaderMeta}>
@@ -465,6 +471,12 @@ export default function FriendsScreen() {
                       </Text>
                     )}
                   </View>
+
+                  <Ionicons
+                    name="arrow-forward-circle-outline"
+                    size={24}
+                    color="#8a8079"
+                  />
                 </View>
 
                 <Text style={styles.feedProjectName}>{item.project.name}</Text>
@@ -489,7 +501,7 @@ export default function FriendsScreen() {
                   {item.project.stampCount} stamp
                   {item.project.stampCount === 1 ? "" : "s"}
                 </Text>
-              </View>
+              </Pressable>
             ))
           )}
         </View>

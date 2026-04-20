@@ -82,7 +82,7 @@ export default function ProtectedLayout() {
       <Stack.Screen name="editor/index" />
       <Stack.Screen name="editor/[id]" options={{ gestureEnabled: false }} />
       <Stack.Screen name="editor/select-stamps" />
-      <Stack.Screen name="friends/index" />
+      <Stack.Screen name="friends" />
       <Stack.Screen name="profile/index" />
       <Stack.Screen name="profile/setup" />
     </Stack>

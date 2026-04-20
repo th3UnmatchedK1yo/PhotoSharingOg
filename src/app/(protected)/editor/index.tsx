@@ -15,8 +15,16 @@ import {
 import BottomTabBar from "../../../components/shared/BottomTabBar";
 import StampFrame from "../../../components/stamp/StampFrame";
 import { useAuth } from "../../../providers/AuthProvider";
-import { createProject, deleteProject, getProjects } from "../../../services/projects";
-import { getSharedFeed, shareProject, unshareProject } from "../../../services/social";
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+} from "../../../services/projects";
+import {
+  getMySharedProjectIds,
+  shareProject,
+  unshareProject,
+} from "../../../services/social";
 import type { ProjectSummary } from "../../../types/project";
 
 export default function EditorScreen() {
@@ -38,20 +46,15 @@ export default function EditorScreen() {
     try {
       setLoading(true);
 
-      const [projectData, sharedFeed] = await Promise.all([
+      const [projectData, mySharedIds] = await Promise.all([
         getProjects(user.id),
-        getSharedFeed(),
+        getMySharedProjectIds(user.id),
       ]);
 
       setProjects(projectData);
-
-      const mySharedIds = sharedFeed
-        .filter((item) => item.ownerId === user.id)
-        .map((item) => item.projectId);
-
       setSharedProjectIds(mySharedIds);
     } catch (error) {
-      console.log("getProjects/getSharedFeed error:", error);
+      console.log("getProjects/getMySharedProjectIds error:", error);
       Alert.alert("Error", "Failed to load projects.");
     } finally {
       setLoading(false);
@@ -226,7 +229,11 @@ export default function EditorScreen() {
                         style={styles.cardAction}
                         onPress={() => onDeleteProject(project.id)}
                       >
-                        <Ionicons name="trash-outline" size={18} color="#7b746f" />
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#7b746f"
+                        />
                       </Pressable>
 
                       <Pressable
@@ -250,11 +257,16 @@ export default function EditorScreen() {
 
                   <View style={styles.previewBox}>
                     {project.previewImages.length === 0 ? (
-                      <Text style={styles.previewPlaceholder}>No stamps selected yet</Text>
+                      <Text style={styles.previewPlaceholder}>
+                        No stamps selected yet
+                      </Text>
                     ) : (
                       <View style={styles.previewRow}>
                         {project.previewImages.slice(0, 3).map((imageUrl, index) => (
-                          <View key={`${project.id}-${index}`} style={styles.previewThumb}>
+                          <View
+                            key={`${project.id}-${index}`}
+                            style={styles.previewThumb}
+                          >
                             <StampFrame uri={imageUrl} size={82} />
                           </View>
                         ))}

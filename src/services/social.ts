@@ -1,13 +1,16 @@
 import { supabase } from "../lib/supabase";
-import type { ProjectCanvasConfig, ProjectSummary } from "../types/project";
+import type { ProjectCanvasConfig } from "../types/project";
+import type { Stamp } from "../types/stamp";
 import type {
   FriendItem,
   FriendRequestItem,
   FriendshipRow,
   OutgoingFriendRequestItem,
   PublicProfile,
+  SharedProjectDetail,
   SharedProjectFeedItem,
 } from "../types/social";
+import { getDayKey } from "../utils/date";
 
 type FriendshipDbRow = {
   id: string;
@@ -25,35 +28,74 @@ type PublicProfileRow = {
   avatar_url: string | null;
 };
 
-type ProjectRow = {
+type SharedProjectFeedRpcRow = {
   id: string;
-  user_id: string;
-  name: string;
-  status: string;
-  background_key: string | null;
-  canvas_json: unknown;
-  created_at: string;
-  updated_at: string;
-};
-
-type SharedProjectRow = {
-  id: string;
-  owner_id: string;
-  project_id: string;
-  caption: string | null;
-  created_at: string;
-  projects: ProjectRow | null;
-};
-
-type ProjectStampRow = {
-  project_id: string;
-  stamps: {
-    image_url: string;
+  ownerId: string;
+  projectId: string;
+  caption: string;
+  createdAt: string;
+  owner: {
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    avatarUrl: string | null;
   } | null;
+  project: {
+    id: string;
+    userId: string;
+    name: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    stampCount: number;
+    previewImages: string[];
+    backgroundKey: string;
+    canvas: unknown;
+  };
+};
+
+type SharedProjectDetailRpcRow = {
+  id: string;
+  ownerId: string;
+  projectId: string;
+  caption: string;
+  createdAt: string;
+  owner: {
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    avatarUrl: string | null;
+  } | null;
+  project: {
+    id: string;
+    userId: string;
+    name: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    backgroundKey: string;
+    canvas: unknown;
+  };
+  stamps: Array<{
+    id: string;
+    userId: string;
+    imageUrl: string;
+    cloudinaryPublicId: string | null;
+    caption: string;
+    capturedAt: string;
+    createdAt: string;
+  }>;
 };
 
 function parseBackgroundKey(value: string | null | undefined): string {
   return value?.trim() ?? "";
+}
+
+function normalizeLayerScale<T extends Record<string, unknown>>(layer: T) {
+  if (!("scale" in layer)) {
+    (layer as Record<string, unknown>).scale = 1;
+  }
+  return layer;
 }
 
 function parseCanvasConfig(value: unknown): ProjectCanvasConfig {
@@ -66,21 +108,34 @@ function parseCanvasConfig(value: unknown): ProjectCanvasConfig {
   }
 
   const raw = value as Record<string, unknown>;
-  const rawTextLayers = Array.isArray(raw.textLayers) ? raw.textLayers : [];
 
-  const textLayers = rawTextLayers.map((layer) => {
-    if (layer && typeof layer === "object") {
-      const record = layer as Record<string, unknown>;
-      if (!("scale" in record)) {
-        record.scale = 1;
-      }
-    }
-    return layer;
-  });
+  const stampLayers = Array.isArray(raw.stampLayers)
+    ? raw.stampLayers.map((layer) =>
+        layer && typeof layer === "object"
+          ? normalizeLayerScale(layer as Record<string, unknown>)
+          : layer,
+      )
+    : [];
+
+  const assetLayers = Array.isArray(raw.assetLayers)
+    ? raw.assetLayers.map((layer) =>
+        layer && typeof layer === "object"
+          ? normalizeLayerScale(layer as Record<string, unknown>)
+          : layer,
+      )
+    : [];
+
+  const textLayers = Array.isArray(raw.textLayers)
+    ? raw.textLayers.map((layer) =>
+        layer && typeof layer === "object"
+          ? normalizeLayerScale(layer as Record<string, unknown>)
+          : layer,
+      )
+    : [];
 
   return {
-    stampLayers: Array.isArray(raw.stampLayers) ? raw.stampLayers : [],
-    assetLayers: Array.isArray(raw.assetLayers) ? raw.assetLayers : [],
+    stampLayers: stampLayers as ProjectCanvasConfig["stampLayers"],
+    assetLayers: assetLayers as ProjectCanvasConfig["assetLayers"],
     textLayers: textLayers as ProjectCanvasConfig["textLayers"],
   };
 }
@@ -105,18 +160,17 @@ function mapFriendship(row: FriendshipDbRow): FriendshipRow {
   };
 }
 
-function groupPreviewImages(rows: ProjectStampRow[]) {
-  const map = new Map<string, string[]>();
-
-  for (const row of rows) {
-    const current = map.get(row.project_id) ?? [];
-    if (row.stamps?.image_url) {
-      current.push(row.stamps.image_url);
-    }
-    map.set(row.project_id, current);
-  }
-
-  return map;
+function mapStampFromRpc(row: SharedProjectDetailRpcRow["stamps"][number]): Stamp {
+  return {
+    id: row.id,
+    userId: row.userId,
+    imageUrl: row.imageUrl,
+    cloudinaryPublicId: row.cloudinaryPublicId,
+    caption: row.caption ?? "",
+    capturedAt: row.capturedAt,
+    createdAt: row.createdAt,
+    dayKey: getDayKey(row.capturedAt),
+  };
 }
 
 async function getPublicProfilesByIds(userIds: string[]) {
@@ -332,6 +386,21 @@ export async function getOutgoingPendingUserIds(userId: string) {
     .map((row) => row.addresseeId);
 }
 
+export async function getMySharedProjectIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("shared_projects")
+    .select("project_id")
+    .eq("owner_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data ?? []) as Array<{ project_id: string }>).map(
+    (row) => row.project_id,
+  );
+}
+
 export async function shareProject(
   ownerId: string,
   projectId: string,
@@ -363,88 +432,86 @@ export async function unshareProject(projectId: string) {
 }
 
 export async function getSharedFeed(): Promise<SharedProjectFeedItem[]> {
-  const { data, error } = await supabase
-    .from("shared_projects")
-    .select(
-      `
-      id,
-      owner_id,
-      project_id,
-      caption,
-      created_at,
-      projects (
-        id,
-        user_id,
-        name,
-        status,
-        background_key,
-        canvas_json,
-        created_at,
-        updated_at
-      )
-      `,
-    )
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.rpc("get_friends_shared_feed");
 
   if (error) {
     throw error;
   }
 
-  const rows = (data ?? []) as unknown as SharedProjectRow[];
+  const rows = (data ?? []) as SharedProjectFeedRpcRow[];
 
-  const validRows = rows.filter((row) => row.projects);
-  const ownerIds = validRows.map((row) => row.owner_id);
-  const projectIds = validRows.map((row) => row.project_id);
+  return rows.map((row) => ({
+    id: row.id,
+    ownerId: row.ownerId,
+    projectId: row.projectId,
+    caption: row.caption ?? "",
+    createdAt: row.createdAt,
+    owner: row.owner
+      ? {
+          id: row.owner.id,
+          username: row.owner.username,
+          displayName: row.owner.displayName,
+          avatarUrl: row.owner.avatarUrl,
+        }
+      : null,
+    project: {
+      id: row.project.id,
+      userId: row.project.userId,
+      name: row.project.name,
+      status: row.project.status,
+      createdAt: row.project.createdAt,
+      updatedAt: row.project.updatedAt,
+      stampCount: row.project.stampCount ?? 0,
+      previewImages: Array.isArray(row.project.previewImages)
+        ? row.project.previewImages.filter(Boolean).slice(0, 3)
+        : [],
+      backgroundKey: parseBackgroundKey(row.project.backgroundKey),
+      canvas: parseCanvasConfig(row.project.canvas),
+    },
+  }));
+}
 
-  const [profileMap, stampResult] = await Promise.all([
-    getPublicProfilesByIds(ownerIds),
-    supabase
-      .from("project_stamps")
-      .select(
-        `
-        project_id,
-        stamps (
-          image_url
-        )
-        `,
-      )
-      .in("project_id", projectIds),
-  ]);
+export async function getSharedProjectDetail(
+  sharedProjectId: string,
+): Promise<SharedProjectDetail | null> {
+  const { data, error } = await supabase.rpc("get_shared_project_detail", {
+    shared_project_id: sharedProjectId,
+  });
 
-  if (stampResult.error) {
-    throw stampResult.error;
+  if (error) {
+    throw error;
   }
 
-  const previewMap = groupPreviewImages(
-    (stampResult.data ?? []) as unknown as ProjectStampRow[],
-  );
+  if (!data) {
+    return null;
+  }
 
-  return validRows.map((row) => {
-    const project = row.projects as ProjectRow;
-    const previewImages = (previewMap.get(project.id) ?? []).slice(0, 3);
-    const stampCount = previewMap.get(project.id)?.length ?? 0;
+  const row = data as SharedProjectDetailRpcRow;
 
-    const projectSummary: ProjectSummary = {
-      id: project.id,
-      userId: project.user_id,
-      name: project.name,
-      status: project.status,
-      createdAt: project.created_at,
-      updatedAt: project.updated_at,
-      stampCount,
-      previewImages,
-      backgroundKey: parseBackgroundKey(project.background_key),
-      canvas: parseCanvasConfig(project.canvas_json),
-    };
-
-    return {
-      id: row.id,
-      ownerId: row.owner_id,
-      projectId: row.project_id,
-      caption: row.caption ?? "",
-      createdAt: row.created_at,
-      owner: profileMap.get(row.owner_id) ?? null,
-      project: projectSummary,
-    };
-  });
+  return {
+    id: row.id,
+    ownerId: row.ownerId,
+    projectId: row.projectId,
+    caption: row.caption ?? "",
+    createdAt: row.createdAt,
+    owner: row.owner
+      ? {
+          id: row.owner.id,
+          username: row.owner.username,
+          displayName: row.owner.displayName,
+          avatarUrl: row.owner.avatarUrl,
+        }
+      : null,
+    project: {
+      id: row.project.id,
+      userId: row.project.userId,
+      name: row.project.name,
+      status: row.project.status,
+      createdAt: row.project.createdAt,
+      updatedAt: row.project.updatedAt,
+      backgroundKey: row.project.backgroundKey ?? "",
+      canvas: parseCanvasConfig(row.project.canvas),
+    },
+    stamps: (row.stamps ?? []).map(mapStampFromRpc),
+  };
 }

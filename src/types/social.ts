@@ -1,4 +1,5 @@
-import type { ProjectSummary } from "./project";
+import type { ProjectCanvasConfig, ProjectSummary } from "./project";
+import type { Stamp } from "./stamp";
 
 export type FriendshipStatus = "pending" | "accepted" | "blocked";
 
@@ -46,4 +47,24 @@ export type SharedProjectFeedItem = {
   createdAt: string;
   owner: PublicProfile | null;
   project: ProjectSummary;
+};
+
+export type SharedProjectDetail = {
+  id: string;
+  ownerId: string;
+  projectId: string;
+  caption: string;
+  createdAt: string;
+  owner: PublicProfile | null;
+  project: {
+    id: string;
+    userId: string;
+    name: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    backgroundKey: string;
+    canvas: ProjectCanvasConfig;
+  };
+  stamps: Stamp[];
 };
