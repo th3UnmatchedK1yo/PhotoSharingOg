@@ -59,7 +59,7 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       loadProfile();
-    }, [loadProfile])
+    }, [loadProfile]),
   );
 
   const onSave = async () => {
@@ -91,7 +91,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color="#7a6f68" />
       </View>
     );
   }
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
       <View style={styles.topRow}>
         <View />
         <Pressable style={styles.arrowButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-forward" size={26} color="#fff" />
+          <Ionicons name="arrow-forward" size={26} color="#5f5a56" />
         </Pressable>
       </View>
 
@@ -139,7 +139,7 @@ export default function ProfileScreen() {
           value={displayName}
           onChangeText={setDisplayName}
           placeholder="Your display name"
-          placeholderTextColor="#8f857d"
+          placeholderTextColor="#9b918a"
           style={styles.input}
         />
 
@@ -148,7 +148,7 @@ export default function ProfileScreen() {
           value={username}
           onChangeText={setUsername}
           placeholder="username"
-          placeholderTextColor="#8f857d"
+          placeholderTextColor="#9b918a"
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
@@ -180,7 +180,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f1ed",
   },
   content: {
     paddingTop: 46,
@@ -189,19 +189,23 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f1ed",
     alignItems: "center",
     justifyContent: "center",
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 22,
   },
   arrowButton: {
     width: 46,
     height: 46,
     borderRadius: 23,
+    backgroundColor: "#fbf8f5",
+    borderWidth: 1,
+    borderColor: "#e5ddd7",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -214,59 +218,60 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 5,
-    borderColor: "#f0b63f",
+    borderColor: "#d7ad52",
+    backgroundColor: "#e8e1da",
   },
   avatarFallback: {
     width: 140,
     height: 140,
     borderRadius: 70,
     borderWidth: 5,
-    borderColor: "#f0b63f",
-    backgroundColor: "#1d1816",
+    borderColor: "#d7ad52",
+    backgroundColor: "#fbf8f5",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarFallbackText: {
-    color: "#fff",
+    color: "#2f2a27",
     fontSize: 54,
     fontWeight: "700",
   },
   nameText: {
     textAlign: "center",
-    color: "#fff",
+    color: "#2b2522",
     fontSize: 34,
     fontWeight: "700",
   },
   usernameText: {
     textAlign: "center",
-    color: "#f0b63f",
+    color: "#9a7531",
     fontSize: 18,
     fontWeight: "600",
     marginTop: 8,
     marginBottom: 28,
   },
   card: {
-    backgroundColor: "#111",
+    backgroundColor: "#fbf8f5",
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: "#25211f",
+    borderColor: "#e5ddd7",
     padding: 18,
     marginBottom: 18,
   },
   cardTitle: {
-    color: "#fff",
+    color: "#342f2c",
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 8,
   },
   cardHint: {
-    color: "#a79c94",
+    color: "#746c66",
     fontSize: 15,
     lineHeight: 21,
     marginBottom: 16,
   },
   fieldLabel: {
-    color: "#f0b63f",
+    color: "#6f6258",
     fontSize: 14,
     fontWeight: "700",
     marginBottom: 8,
@@ -276,9 +281,9 @@ const styles = StyleSheet.create({
     minHeight: 54,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#2c2724",
-    backgroundColor: "#191513",
-    color: "#fff",
+    borderColor: "#e5ddd7",
+    backgroundColor: "#fffdfb",
+    color: "#2f2b29",
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 8,
@@ -287,7 +292,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     minHeight: 54,
     borderRadius: 20,
-    backgroundColor: "#f0b63f",
+    backgroundColor: "#2f2a27",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -295,26 +300,26 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   saveButtonText: {
-    color: "#2e2415",
+    color: "#fffaf6",
     fontSize: 18,
     fontWeight: "700",
   },
   emailText: {
-    color: "#c4bab2",
+    color: "#6f6660",
     fontSize: 16,
     marginBottom: 16,
   },
   signOutButton: {
     minHeight: 52,
     borderRadius: 18,
-    backgroundColor: "#1b1715",
+    backgroundColor: "#f2ebe7",
     borderWidth: 1,
-    borderColor: "#2c2724",
+    borderColor: "#e3d7cf",
     alignItems: "center",
     justifyContent: "center",
   },
   signOutText: {
-    color: "#fff",
+    color: "#6e4238",
     fontSize: 17,
     fontWeight: "700",
   },

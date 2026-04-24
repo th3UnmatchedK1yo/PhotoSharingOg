@@ -103,8 +103,12 @@ export default function FriendsScreen() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const [searchResults, setSearchResults] = useState<PublicProfile[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<FriendRequestItem[]>([]);
-  const [outgoingRequests, setOutgoingRequests] = useState<OutgoingFriendRequestItem[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<FriendRequestItem[]>(
+    [],
+  );
+  const [outgoingRequests, setOutgoingRequests] = useState<
+    OutgoingFriendRequestItem[]
+  >([]);
   const [friends, setFriends] = useState<FriendItem[]>([]);
   const [feedItems, setFeedItems] = useState<SharedProjectFeedItem[]>([]);
 
@@ -238,7 +242,7 @@ export default function FriendsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <View>
+          <View style={styles.headerCopy}>
             <Text style={styles.headerTitle}>Friends</Text>
             <Text style={styles.headerSubtitle}>
               Build a private scrapbook circle and see what friends share.
@@ -381,7 +385,9 @@ export default function FriendsScreen() {
           <Text style={styles.sectionTitle}>Outgoing requests</Text>
 
           {outgoingRequests.length === 0 ? (
-            <Text style={styles.emptyText}>You do not have any outgoing requests.</Text>
+            <Text style={styles.emptyText}>
+              You do not have any outgoing requests.
+            </Text>
           ) : (
             outgoingRequests.map((item) => (
               <View key={item.friendshipId} style={styles.requestCard}>
@@ -529,11 +535,17 @@ const styles = StyleSheet.create({
     paddingBottom: 128,
   },
   headerRow: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: 12,
     marginBottom: 20,
+  },
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 4,
   },
   headerTitle: {
     fontSize: 32,
@@ -542,12 +554,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   headerSubtitle: {
+    maxWidth: "100%",
     fontSize: 15,
     lineHeight: 22,
     color: "#746c66",
-    maxWidth: 260,
   },
   refreshPill: {
+    flexShrink: 0,
+    minWidth: 82,
     minHeight: 42,
     borderRadius: 999,
     backgroundColor: "#fbf8f5",
@@ -555,7 +569,7 @@ const styles = StyleSheet.create({
     borderColor: "#e5ddd7",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   refreshPillText: {
     fontSize: 13,
@@ -582,6 +596,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    minWidth: 0,
     minHeight: 48,
     borderRadius: 16,
     borderWidth: 1,
@@ -617,12 +632,14 @@ const styles = StyleSheet.create({
   },
   personLeft: {
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
   personMeta: {
     flex: 1,
+    minWidth: 0,
   },
   personName: {
     fontSize: 16,
@@ -639,6 +656,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButton: {
+    flexShrink: 0,
     minWidth: 92,
     minHeight: 48,
     borderRadius: 16,
@@ -648,6 +666,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   primaryButtonSmall: {
+    flexShrink: 0,
     minWidth: 74,
     minHeight: 40,
     borderRadius: 14,
@@ -662,6 +681,7 @@ const styles = StyleSheet.create({
     color: "#fffaf6",
   },
   secondaryButtonSmall: {
+    flexShrink: 0,
     minWidth: 74,
     minHeight: 40,
     borderRadius: 14,
@@ -678,6 +698,7 @@ const styles = StyleSheet.create({
     color: "#6e6560",
   },
   statusPill: {
+    flexShrink: 0,
     minHeight: 36,
     borderRadius: 999,
     backgroundColor: "#efe9e5",
@@ -701,6 +722,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   friendBadge: {
+    flexShrink: 0,
     minHeight: 34,
     borderRadius: 999,
     backgroundColor: "#efe9e5",
@@ -728,6 +750,7 @@ const styles = StyleSheet.create({
   },
   feedHeaderMeta: {
     flex: 1,
+    minWidth: 0,
   },
   feedOwner: {
     fontSize: 16,

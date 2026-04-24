@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
@@ -56,6 +57,20 @@ export default function StampCameraScreen() {
   const cameraRef = useRef<CameraView | null>(null);
   const router = useRouter();
   const { user } = useAuth();
+  const { width, height } = useWindowDimensions();
+
+  const isShortScreen = height < 760;
+  const cameraHorizontalMargin = width < 380 ? 22 : 28;
+  const previewTop = isShortScreen ? 104 : 118;
+  const previewBottom = isShortScreen ? 216 : 236;
+  const captureBottom = isShortScreen ? 116 : 128;
+
+  const frameWidth = Math.min(
+    FRAME_WIDTH,
+    Math.max(220, width - cameraHorizontalMargin * 2 - 74),
+  );
+
+  const frameHeight = Math.min(FRAME_HEIGHT, Math.max(260, height * 0.39));
 
   useFocusEffect(
     useCallback(() => {
@@ -84,7 +99,7 @@ export default function StampCameraScreen() {
       return () => {
         active = false;
       };
-    }, [user])
+    }, [user]),
   );
 
   const takePicture = async () => {
@@ -138,7 +153,8 @@ export default function StampCameraScreen() {
       <View style={styles.permissionScreen}>
         <Text style={styles.permissionTitle}>Camera access needed</Text>
         <Text style={styles.permissionText}>
-          Allow camera access so you can capture stamps and save them to your scrapbook.
+          Allow camera access so you can capture stamps and save them to your
+          scrapbook.
         </Text>
 
         <Pressable style={styles.primaryButton} onPress={requestPermission}>
@@ -155,25 +171,36 @@ export default function StampCameraScreen() {
           style={styles.avatarButton}
           onPress={() => router.push("/profile")}
         >
-          <Text style={styles.avatarText}>{getInitial(profile, user?.email)}</Text>
+          <Text style={styles.avatarText}>
+            {getInitial(profile, user?.email)}
+          </Text>
         </Pressable>
 
         <Pressable
           style={styles.friendsPill}
           onPress={() => router.push("/friends")}
         >
-          <Ionicons name="people" size={20} color="#fff" />
+          <Ionicons name="people" size={20} color="#5f5a56" />
           <Text style={styles.friendsPillText}>
             {friendCount > 0 ? `${friendCount} Friends` : "Friends"}
           </Text>
         </Pressable>
 
         <Pressable style={styles.iconCircle} onPress={cycleFlash}>
-          <Ionicons name={getFlashIcon(flash)} size={22} color="#fff" />
+          <Ionicons name={getFlashIcon(flash)} size={22} color="#5f5a56" />
         </Pressable>
       </View>
 
-      <View style={styles.previewShell}>
+      <View
+        style={[
+          styles.previewShell,
+          {
+            marginTop: previewTop,
+            marginHorizontal: cameraHorizontalMargin,
+            marginBottom: previewBottom,
+          },
+        ]}
+      >
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -185,11 +212,19 @@ export default function StampCameraScreen() {
         />
 
         <View pointerEvents="none" style={styles.overlay}>
-          <View style={styles.frame} />
+          <View
+            style={[
+              styles.frame,
+              {
+                width: frameWidth,
+                height: frameHeight,
+              },
+            ]}
+          />
         </View>
       </View>
 
-      <View style={styles.captureRow}>
+      <View style={[styles.captureRow, { bottom: captureBottom }]}>
         <Pressable style={styles.controlButton} onPress={cycleZoom}>
           <Text style={styles.controlText}>{ZOOM_STEPS[zoomIndex].label}</Text>
         </Pressable>
@@ -202,7 +237,7 @@ export default function StampCameraScreen() {
         </Pressable>
 
         <Pressable style={styles.controlButton} onPress={toggleFacing}>
-          <Ionicons name="camera-reverse-outline" size={26} color="#5f5a56" />
+          <Ionicons name="camera-reverse-outline" size={24} color="#5f5a56" />
         </Pressable>
       </View>
 
@@ -267,44 +302,60 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: "#1e1a18",
+    backgroundColor: "#fbf8f5",
     borderWidth: 2,
-    borderColor: "#f0b63f",
+    borderColor: "#d7ad52",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   avatarText: {
-    color: "#fff",
+    color: "#2f2a27",
     fontSize: 22,
     fontWeight: "700",
   },
   friendsPill: {
     minHeight: 54,
     borderRadius: 28,
-    backgroundColor: "#1e1a18",
+    backgroundColor: "#fbf8f5",
+    borderWidth: 1,
+    borderColor: "#e5ddd7",
     paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   friendsPillText: {
-    color: "#fff",
-    fontSize: 18,
+    color: "#3f3833",
+    fontSize: 17,
     fontWeight: "700",
   },
   iconCircle: {
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: "#1e1a18",
+    backgroundColor: "#fbf8f5",
+    borderWidth: 1,
+    borderColor: "#e5ddd7",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   previewShell: {
     flex: 1,
-    marginTop: 118,
-    marginHorizontal: 28,
-    marginBottom: 210,
     borderRadius: 34,
     overflow: "hidden",
     backgroundColor: "#000",
@@ -318,8 +369,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   frame: {
-    width: FRAME_WIDTH,
-    height: FRAME_HEIGHT,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.88)",
     borderRadius: 28,
@@ -329,43 +378,47 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 26,
     right: 26,
-    bottom: 126,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   controlButton: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: "#fbf8f5",
     borderWidth: 1,
     borderColor: "#e5ddd7",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   controlText: {
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: "700",
     color: "#5f5a56",
   },
   shutterButton: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 82,
+    height: 82,
+    borderRadius: 41,
     borderWidth: 4,
-    borderColor: "#5f5a56",
+    borderColor: "#6f6862",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.22)",
   },
   shutterDisabled: {
     opacity: 0.65,
   },
   shutterInner: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: "#fff",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fffdfb",
   },
 });
