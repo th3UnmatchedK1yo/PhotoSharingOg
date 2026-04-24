@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import {
   ASSET_SECTIONS,
@@ -61,6 +62,10 @@ export default function EditorOptionsSheet({
   onDeleteSelectedText,
 }: EditorOptionsSheetProps) {
   const hasSelectedText = Boolean(selectedTextLayerId);
+  const { width } = useWindowDimensions();
+
+  const isNarrow = width < 390;
+  const cardWidth = Math.floor((width - 64) / 2);
 
   return (
     <Modal
@@ -72,13 +77,21 @@ export default function EditorOptionsSheet({
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <View style={styles.headerRow}>
-            <Pressable style={styles.doneButton} onPress={onClose}>
+            <Pressable
+              style={[
+                styles.doneButton,
+                isNarrow && styles.doneButtonNarrow,
+              ]}
+              onPress={onClose}
+            >
               <Text style={styles.doneText}>Done</Text>
             </Pressable>
 
-            <Text style={styles.title}>Edit Canvas</Text>
+            <Text numberOfLines={1} style={[styles.title, isNarrow && styles.titleNarrow]}>
+              Edit Canvas
+            </Text>
 
-            <View style={styles.doneButtonPlaceholder} />
+            <View style={[styles.doneButtonPlaceholder, isNarrow && styles.doneButtonNarrow]} />
           </View>
 
           <View style={styles.segmented}>
@@ -124,6 +137,7 @@ export default function EditorOptionsSheet({
                         key={item.key}
                         style={[
                           styles.optionCard,
+                          { width: cardWidth },
                           active && styles.optionCardActive,
                         ]}
                         onPress={() => onSelectBackground(item.key)}
@@ -133,7 +147,9 @@ export default function EditorOptionsSheet({
                           style={styles.bgPreview}
                           resizeMode="cover"
                         />
-                        <Text style={styles.optionLabel}>{item.label}</Text>
+                        <Text numberOfLines={1} style={styles.optionLabel}>
+                          {item.label}
+                        </Text>
                       </Pressable>
                     );
                   })}
@@ -308,6 +324,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 18,
+    gap: 8,
   },
   doneButton: {
     minWidth: 74,
@@ -320,6 +337,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 14,
   },
+  doneButtonNarrow: {
+    minWidth: 64,
+  },
   doneButtonPlaceholder: {
     minWidth: 74,
   },
@@ -329,9 +349,14 @@ const styles = StyleSheet.create({
     color: "#5f5a56",
   },
   title: {
+    flex: 1,
+    textAlign: "center",
     fontSize: 24,
     fontWeight: "700",
     color: "#111",
+  },
+  titleNarrow: {
+    fontSize: 20,
   },
   segmented: {
     flexDirection: "row",
@@ -372,20 +397,22 @@ const styles = StyleSheet.create({
   optionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    justifyContent: "space-between",
+    rowGap: 12,
   },
   optionCard: {
-    width: "47%",
     backgroundColor: "#fbf8f5",
     borderRadius: 18,
     padding: 10,
     borderWidth: 2,
     borderColor: "#e5ddd7",
+    overflow: "hidden",
   },
   optionCardActive: {
     borderColor: "#7f7670",
   },
   bgPreview: {
+    width: "100%",
     height: 90,
     borderRadius: 14,
     marginBottom: 8,

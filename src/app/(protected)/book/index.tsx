@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
@@ -20,9 +21,13 @@ import { formatDayLabel } from "../../../utils/date";
 export default function BookScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { width } = useWindowDimensions();
 
   const [grouped, setGrouped] = useState<Record<string, Stamp[]>>({});
   const [loading, setLoading] = useState(true);
+
+  const titleSize = width < 390 ? 36 : 42;
+  const previewSize = width < 390 ? 80 : 90;
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -42,7 +47,7 @@ export default function BookScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const onSignOut = async () => {
@@ -60,7 +65,7 @@ export default function BookScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Collections</Text>
+        <Text style={[styles.title, { fontSize: titleSize }]}>Collections</Text>
         <OverflowMenu onSignOut={onSignOut} />
       </View>
 
@@ -100,7 +105,7 @@ export default function BookScreen() {
                 <View style={styles.previewRow}>
                   {previews.map((stamp) => (
                     <View key={stamp.id} style={styles.previewItem}>
-                      <StampFrame uri={stamp.imageUrl} size={90} />
+                      <StampFrame uri={stamp.imageUrl} size={previewSize} />
                     </View>
                   ))}
                 </View>
@@ -131,7 +136,6 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontSize: 42,
     fontWeight: "700",
     color: "#4f4a47",
   },
@@ -189,7 +193,7 @@ const styles = StyleSheet.create({
   },
   previewRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
   },
   previewItem: {
     flexShrink: 1,

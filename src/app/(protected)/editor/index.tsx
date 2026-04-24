@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
 import StampFrame from "../../../components/stamp/StampFrame";
@@ -30,6 +31,7 @@ import type { ProjectSummary } from "../../../types/project";
 export default function EditorScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { width } = useWindowDimensions();
 
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +41,13 @@ export default function EditorScreen() {
 
   const [sharedProjectIds, setSharedProjectIds] = useState<string[]>([]);
   const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
+
+  const isNarrow = width < 390;
+  const titleSize = width < 360 ? 34 : isNarrow ? 38 : 42;
+  const headerButtonSize = isNarrow ? 48 : 56;
+  const cardActionSize = isNarrow ? 38 : 42;
+  const previewSize = width < 360 ? 74 : 82;
+  const projectTitleSize = width < 360 ? 24 : 28;
 
   const loadProjects = useCallback(async () => {
     if (!user) return;
@@ -146,8 +155,8 @@ export default function EditorScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.title}>Editor</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={[styles.title, { fontSize: titleSize }]}>Editor</Text>
           <Text style={styles.subtitle}>
             Build scrapbook projects and choose which ones your friends can see.
           </Text>
@@ -155,14 +164,20 @@ export default function EditorScreen() {
 
         <View style={styles.headerActions}>
           <Pressable
-            style={styles.headerCircle}
+            style={[
+              styles.headerCircle,
+              { width: headerButtonSize, height: headerButtonSize, borderRadius: headerButtonSize / 2 },
+            ]}
             onPress={() => router.push("/friends")}
           >
             <Ionicons name="people-outline" size={22} color="#5f5a56" />
           </Pressable>
 
           <Pressable
-            style={styles.headerCircle}
+            style={[
+              styles.headerCircle,
+              { width: headerButtonSize, height: headerButtonSize, borderRadius: headerButtonSize / 2 },
+            ]}
             onPress={() => setCreateOpen(true)}
           >
             <Ionicons name="add" size={24} color="#5f5a56" />
@@ -213,6 +228,11 @@ export default function EditorScreen() {
                       <Pressable
                         style={[
                           styles.cardAction,
+                          {
+                            width: cardActionSize,
+                            height: cardActionSize,
+                            borderRadius: cardActionSize / 2,
+                          },
                           isShared && styles.cardActionShared,
                         ]}
                         onPress={() => onToggleShareProject(project)}
@@ -226,7 +246,14 @@ export default function EditorScreen() {
                       </Pressable>
 
                       <Pressable
-                        style={styles.cardAction}
+                        style={[
+                          styles.cardAction,
+                          {
+                            width: cardActionSize,
+                            height: cardActionSize,
+                            borderRadius: cardActionSize / 2,
+                          },
+                        ]}
                         onPress={() => onDeleteProject(project.id)}
                       >
                         <Ionicons
@@ -237,7 +264,14 @@ export default function EditorScreen() {
                       </Pressable>
 
                       <Pressable
-                        style={styles.cardAction}
+                        style={[
+                          styles.cardAction,
+                          {
+                            width: cardActionSize,
+                            height: cardActionSize,
+                            borderRadius: cardActionSize / 2,
+                          },
+                        ]}
                         onPress={() => router.push(`/editor/${project.id}`)}
                       >
                         <Ionicons name="arrow-forward" size={18} color="#7b746f" />
@@ -245,7 +279,10 @@ export default function EditorScreen() {
                     </View>
                   </View>
 
-                  <Text style={styles.projectName}>{project.name}</Text>
+                  <Text style={[styles.projectName, { fontSize: projectTitleSize }]}>
+                    {project.name}
+                  </Text>
+
                   <Text style={styles.projectMeta}>
                     {project.stampCount} stamps
                     {isUpdatingShare
@@ -267,7 +304,7 @@ export default function EditorScreen() {
                             key={`${project.id}-${index}`}
                             style={styles.previewThumb}
                           >
-                            <StampFrame uri={imageUrl} size={82} />
+                            <StampFrame uri={imageUrl} size={previewSize} />
                           </View>
                         ))}
                       </View>
@@ -353,14 +390,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 8,
+  },
   title: {
-    fontSize: 42,
     fontWeight: "700",
     color: "#4f4a47",
   },
   subtitle: {
     marginTop: 6,
-    maxWidth: 250,
     fontSize: 14,
     lineHeight: 20,
     color: "#7b746f",
@@ -369,11 +409,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    flexShrink: 0,
   },
   headerCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
     backgroundColor: "#fbf8f5",
     borderWidth: 1,
     borderColor: "#e5ddd7",
@@ -427,7 +465,7 @@ const styles = StyleSheet.create({
   projectTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
   },
   projectStatusWrap: {
@@ -435,6 +473,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     flexWrap: "wrap",
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 8,
   },
   projectStatus: {
     fontSize: 14,
@@ -457,17 +498,17 @@ const styles = StyleSheet.create({
   projectActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
+    flexShrink: 0,
   },
   projectCount: {
     fontSize: 15,
     fontWeight: "600",
     color: "#7b746f",
+    minWidth: 12,
+    textAlign: "center",
   },
   cardAction: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
     borderWidth: 1,
     borderColor: "#e5ddd7",
     backgroundColor: "#fff",
@@ -478,7 +519,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ece7e3",
   },
   projectName: {
-    fontSize: 28,
     fontWeight: "700",
     color: "#4f4a47",
     marginTop: 8,

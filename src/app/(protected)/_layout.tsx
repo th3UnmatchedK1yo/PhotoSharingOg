@@ -78,6 +78,7 @@ export default function ProtectedLayout() {
       <Stack.Screen name="stamp/review" />
       <Stack.Screen name="book/index" />
       <Stack.Screen name="book/[day]" />
+      <Stack.Screen name="book-stamp/[id]" />
       <Stack.Screen name="calendar/index" />
       <Stack.Screen name="editor/index" />
       <Stack.Screen name="editor/[id]" options={{ gestureEnabled: false }} />
