@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Image, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import {
-  Gesture,
-  GestureDetector,
-} from "react-native-gesture-handler";
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -14,6 +17,7 @@ import {
   BACKGROUND_MAP,
   FONT_OPTIONS,
 } from "../../constants/editorCatalog";
+import { STAMP_OUTER_ASPECT } from "../../constants/stampTemplate";
 import type {
   AssetLayer,
   ProjectCanvasConfig,
@@ -46,7 +50,7 @@ type RenderLayer =
   | { kind: "text"; layer: TextLayer; z: number };
 
 const STAMP_BASE_WIDTH = 122;
-const STAMP_BASE_HEIGHT = Math.round(STAMP_BASE_WIDTH * 1.25);
+const STAMP_BASE_HEIGHT = Math.round(STAMP_BASE_WIDTH * STAMP_OUTER_ASPECT);
 const BASE_DECORATION_LONG_SIDE = 92;
 const BACKGROUND_ASPECT_RATIO = 1587 / 2245;
 const MIN_SCALE = 0.35;
@@ -60,6 +64,7 @@ function clamp(value: number, min: number, max: number) {
 
 function normalizeRotation(rotation: number) {
   "worklet";
+
   let next = rotation % 360;
   if (next > 180) next -= 360;
   if (next < -180) next += 360;
@@ -121,6 +126,32 @@ function getTextBaseSize(layer: TextLayer) {
   return { width, height };
 }
 
+function clampLayerLeft(
+  leftPx: number,
+  canvasWidth: number,
+  layerWidth: number,
+) {
+  "worklet";
+
+  const minLeft = -layerWidth * 0.75;
+  const maxLeft = canvasWidth - layerWidth * 0.25;
+
+  return clamp(leftPx, minLeft, maxLeft);
+}
+
+function clampLayerTop(
+  topPx: number,
+  canvasHeight: number,
+  layerHeight: number,
+) {
+  "worklet";
+
+  const minTop = -layerHeight * 0.75;
+  const maxTop = canvasHeight - layerHeight * 0.25;
+
+  return clamp(topPx, minTop, maxTop);
+}
+
 function TransformableLayer({
   x,
   y,
@@ -158,20 +189,21 @@ function TransformableLayer({
   const pinchScale = useSharedValue(1);
   const rotateDeg = useSharedValue(0);
 
-  const panStartX = useSharedValue(x);
-  const panStartY = useSharedValue(y);
-
   useEffect(() => {
     xSv.value = x;
     ySv.value = y;
     scaleSv.value = scale;
     rotationSv.value = rotation;
-  }, [rotation, scale, x, y, rotationSv, scaleSv, xSv, ySv]);
+  }, [rotation, rotationSv, scale, scaleSv, x, xSv, y, ySv]);
 
   const commitTransform = () => {
     "worklet";
 
-    const nextScale = clamp(scaleSv.value * pinchScale.value, MIN_SCALE, MAX_SCALE);
+    const nextScale = clamp(
+      scaleSv.value * pinchScale.value,
+      MIN_SCALE,
+      MAX_SCALE,
+    );
     const nextRotation = normalizeRotation(rotationSv.value + rotateDeg.value);
 
     const rawLeftPx = xSv.value * canvasWidth + dragX.value;
@@ -180,11 +212,8 @@ function TransformableLayer({
     const finalWidth = baseWidth * nextScale;
     const finalHeight = baseHeight * nextScale;
 
-    const maxLeft = Math.max(0, canvasWidth - finalWidth);
-    const maxTop = Math.max(0, canvasHeight - finalHeight);
-
-    const clampedLeftPx = clamp(rawLeftPx, 0, maxLeft);
-    const clampedTopPx = clamp(rawTopPx, 0, maxTop);
+    const clampedLeftPx = clampLayerLeft(rawLeftPx, canvasWidth, finalWidth);
+    const clampedTopPx = clampLayerTop(rawTopPx, canvasHeight, finalHeight);
 
     const nextX = canvasWidth > 0 ? clampedLeftPx / canvasWidth : 0;
     const nextY = canvasHeight > 0 ? clampedTopPx / canvasHeight : 0;
@@ -208,10 +237,6 @@ function TransformableLayer({
   };
 
   const panGesture = Gesture.Pan()
-    .onBegin(() => {
-      panStartX.value = xSv.value;
-      panStartY.value = ySv.value;
-    })
     .onUpdate((event) => {
       dragX.value = event.translationX;
       dragY.value = event.translationY;
@@ -254,6 +279,8 @@ function TransformableLayer({
     left: xSv.value * canvasWidth,
     top: ySv.value * canvasHeight,
     zIndex: z,
+    width: baseWidth,
+    height: baseHeight,
     transform: [
       { translateX: dragX.value },
       { translateY: dragY.value },
@@ -295,7 +322,7 @@ function StampLayerView({
       baseHeight={STAMP_BASE_HEIGHT}
       onTransformEnd={(next) => onTransformEnd(layer.id, next)}
     >
-      <StampFrame uri={stamp.imageUrl} size={STAMP_BASE_WIDTH} />
+      <StampFrame uri={stamp.imageUrl} size={STAMP_BASE_WIDTH} shadow={false} />
     </TransformableLayer>
   );
 }

@@ -27,11 +27,10 @@ export default function ReviewScreen() {
   const [saving, setSaving] = useState(false);
 
   const previewSize = useMemo(() => {
-    const base = Math.min(width - 80, 260);
-    if (height < 750) {
-      return Math.min(base, 210);
-    }
-    return base;
+    const maxByWidth = width - 80;
+    const maxPreview = height < 760 ? 235 : 285;
+
+    return Math.min(maxByWidth, maxPreview);
   }, [width, height]);
 
   const onSave = async () => {
@@ -145,10 +144,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f1ed",
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 32,
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 42,
+    paddingBottom: 32,
   },
   center: {
     flex: 1,
@@ -158,14 +157,14 @@ const styles = StyleSheet.create({
   },
   previewArea: {
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: 26,
   },
   formArea: {
     flex: 1,
   },
   fieldLabel: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#5b5551",
     marginBottom: 8,
   },
@@ -174,7 +173,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd4ce",
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: "#fffdfb",
     paddingHorizontal: 18,
     fontSize: 18,
     color: "#333",
@@ -194,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd4ce",
     borderRadius: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#fffdfb",
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 18,
@@ -218,7 +217,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#5f5a56",
   },
   primaryBtn: {
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#fff",
   },
   errorText: {
