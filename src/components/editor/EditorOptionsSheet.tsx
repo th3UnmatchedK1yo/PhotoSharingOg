@@ -14,6 +14,7 @@ import {
   BACKGROUND_OPTIONS,
   FONT_OPTIONS,
 } from "../../constants/editorCatalog";
+import { COLORS } from "../../constants/theme";
 import type { FontKey } from "../../types/project";
 
 type TabKey = "backgrounds" | "assets" | "text";
@@ -219,7 +220,7 @@ export default function EditorOptionsSheet({
                       value={selectedTextValue}
                       onChangeText={onChangeSelectedText}
                       placeholder="Type your text"
-                      placeholderTextColor="#9d948e"
+                      placeholderTextColor={COLORS.placeholder}
                       style={styles.textInput}
                       multiline
                     />
@@ -307,11 +308,11 @@ export default function EditorOptionsSheet({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.12)",
+    backgroundColor: COLORS.overlay,
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
@@ -330,9 +331,9 @@ const styles = StyleSheet.create({
     minWidth: 74,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
@@ -346,21 +347,21 @@ const styles = StyleSheet.create({
   doneText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   title: {
     flex: 1,
     textAlign: "center",
     fontSize: 24,
     fontWeight: "700",
-    color: "#111",
+    color: COLORS.text,
   },
   titleNarrow: {
     fontSize: 20,
   },
   segmented: {
     flexDirection: "row",
-    backgroundColor: "#e8e2dd",
+    backgroundColor: COLORS.backgroundAlt,
     borderRadius: 999,
     padding: 4,
     marginBottom: 18,
@@ -373,15 +374,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segmentActive: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
   },
   segmentText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#6d6661",
+    color: COLORS.textMuted,
   },
   segmentTextActive: {
-    color: "#1f1b19",
+    color: COLORS.text,
   },
   scrollArea: {
     flexGrow: 0,
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    color: "#7b746f",
+    color: COLORS.textMuted,
     marginBottom: 14,
   },
   optionGrid: {
@@ -401,27 +402,27 @@ const styles = StyleSheet.create({
     rowGap: 12,
   },
   optionCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 18,
     padding: 10,
     borderWidth: 2,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     overflow: "hidden",
   },
   optionCardActive: {
-    borderColor: "#7f7670",
+    borderColor: COLORS.primary,
   },
   bgPreview: {
     width: "100%",
     height: 90,
     borderRadius: 14,
     marginBottom: 8,
-    backgroundColor: "#ddd5cf",
+    backgroundColor: COLORS.surfaceMuted,
   },
   optionLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   assetSection: {
     marginBottom: 20,
@@ -435,9 +436,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 14,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     padding: 6,
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 13,
-    color: "#938a84",
+    color: COLORS.placeholder,
     marginBottom: 14,
   },
   textLayerList: {
@@ -464,44 +465,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     maxWidth: "48%",
   },
   textLayerChipActive: {
-    borderColor: "#7f7670",
-    backgroundColor: "#fff",
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
   },
   textLayerChipLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   editorCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     padding: 14,
     marginBottom: 18,
   },
   editorLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
     marginBottom: 10,
   },
   textInput: {
     minHeight: 92,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
-    backgroundColor: "#fff",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#2f2b29",
+    color: COLORS.text,
     textAlignVertical: "top",
   },
   editorTopGap: {
@@ -516,33 +517,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#fff4f3",
+    backgroundColor: COLORS.dangerSoft,
     borderWidth: 1,
-    borderColor: "#edd3cf",
+    borderColor: COLORS.dangerSoft,
   },
   deleteButtonText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#a15d54",
+    color: COLORS.danger,
   },
   emptyTextEditor: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     padding: 16,
     marginBottom: 18,
   },
   emptyTextEditorTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 6,
   },
   emptyTextEditorText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#7c746e",
+    color: COLORS.textMuted,
   },
   addTextBlock: {
     marginTop: 6,
@@ -551,25 +552,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     paddingHorizontal: 18,
     paddingVertical: 16,
     marginBottom: 12,
   },
   fontCardActive: {
-    borderColor: "#7f7670",
-    backgroundColor: "#fff",
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
   },
   fontPreview: {
     fontSize: 22,
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   fontAction: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
 });

@@ -12,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 import ProjectCanvasReadOnly from "../../../../components/editor/ProjectCanvasReadOnly";
+import { COLORS } from "../../../../constants/theme";
 import { getSharedProjectDetail } from "../../../../services/social";
 import type { PublicProfile, SharedProjectDetail } from "../../../../types/social";
 
@@ -45,7 +46,7 @@ function ProfileAvatar({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: "#e8e1da",
+          backgroundColor: COLORS.backgroundAlt,
         }}
       />
     );
@@ -57,14 +58,14 @@ function ProfileAvatar({
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: "#2f2a27",
+        backgroundColor: COLORS.primary,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
       <Text
         style={{
-          color: "#fffaf6",
+          color: COLORS.primaryText,
           fontWeight: "700",
           fontSize: Math.max(16, size * 0.34),
         }}
@@ -131,7 +132,7 @@ export default function SharedProjectViewerScreen() {
     <View style={styles.screen}>
       <View style={styles.headerRow}>
         <Pressable style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#5f5a56" />
+          <Ionicons name="arrow-back" size={22} color={COLORS.textSoft} />
         </Pressable>
 
         <Text numberOfLines={1} style={styles.title}>
@@ -187,17 +188,17 @@ export default function SharedProjectViewerScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyText: {
     fontSize: 16,
-    color: "#6f6660",
+    color: COLORS.textMuted,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -211,9 +212,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   scroll: {
     flex: 1,
@@ -247,23 +248,23 @@ const styles = StyleSheet.create({
   ownerName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#342f2c",
+    color: COLORS.text,
   },
   ownerHandle: {
     marginTop: 3,
     fontSize: 14,
-    color: "#8a8079",
+    color: COLORS.textMuted,
   },
   projectName: {
     fontSize: 30,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 8,
   },
   caption: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#6f6660",
+    color: COLORS.textMuted,
     marginBottom: 16,
   },
   canvasWrap: {
@@ -271,21 +272,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   metaCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     padding: 16,
   },
   metaTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 10,
   },
   metaText: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#6f6660",
+    color: COLORS.textMuted,
   },
 });

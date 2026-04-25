@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import {
   acceptFriendRequest,
@@ -63,7 +64,7 @@ function ProfileAvatar({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: "#e8e1da",
+          backgroundColor: COLORS.backgroundAlt,
         }}
       />
     );
@@ -75,14 +76,14 @@ function ProfileAvatar({
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: "#2f2a27",
+        backgroundColor: COLORS.primary,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
       <Text
         style={{
-          color: "#fffaf6",
+          color: COLORS.primaryText,
           fontWeight: "700",
           fontSize: Math.max(16, size * 0.34),
         }}
@@ -262,7 +263,7 @@ export default function FriendsScreen() {
               value={searchText}
               onChangeText={setSearchText}
               placeholder="Search by username or display name"
-              placeholderTextColor="#9b918a"
+              placeholderTextColor={COLORS.placeholder}
               style={styles.searchInput}
               autoCapitalize="none"
               autoCorrect={false}
@@ -481,7 +482,7 @@ export default function FriendsScreen() {
                   <Ionicons
                     name="arrow-forward-circle-outline"
                     size={24}
-                    color="#8a8079"
+                    color={COLORS.textMuted}
                   />
                 </View>
 
@@ -521,11 +522,11 @@ export default function FriendsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   loadingScreen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -550,23 +551,23 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#2b2522",
+    color: COLORS.text,
     marginBottom: 6,
   },
   headerSubtitle: {
     maxWidth: "100%",
     fontSize: 15,
     lineHeight: 22,
-    color: "#746c66",
+    color: COLORS.textMuted,
   },
   refreshPill: {
     flexShrink: 0,
     minWidth: 82,
     minHeight: 42,
     borderRadius: 999,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
@@ -574,20 +575,20 @@ const styles = StyleSheet.create({
   refreshPillText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   card: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     padding: 16,
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 12,
   },
   searchRow: {
@@ -600,17 +601,17 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
-    backgroundColor: "#fff",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 14,
     fontSize: 15,
-    color: "#2f2b29",
+    color: COLORS.text,
   },
   emptySearchText: {
     marginTop: 12,
     fontSize: 14,
     lineHeight: 20,
-    color: "#7f756f",
+    color: COLORS.textMuted,
   },
   resultList: {
     marginTop: 14,
@@ -644,12 +645,12 @@ const styles = StyleSheet.create({
   personName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#342f2c",
+    color: COLORS.text,
   },
   personHandle: {
     marginTop: 2,
     fontSize: 13,
-    color: "#8a8079",
+    color: COLORS.textMuted,
   },
   requestActions: {
     flexDirection: "row",
@@ -660,7 +661,7 @@ const styles = StyleSheet.create({
     minWidth: 92,
     minHeight: 48,
     borderRadius: 16,
-    backgroundColor: "#2f2a27",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
@@ -670,7 +671,7 @@ const styles = StyleSheet.create({
     minWidth: 74,
     minHeight: 40,
     borderRadius: 14,
-    backgroundColor: "#2f2a27",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
@@ -678,16 +679,16 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#fffaf6",
+    color: COLORS.primaryText,
   },
   secondaryButtonSmall: {
     flexShrink: 0,
     minWidth: 74,
     minHeight: 40,
     borderRadius: 14,
-    backgroundColor: "#f2ebe7",
+    backgroundColor: COLORS.dangerSoft,
     borderWidth: 1,
-    borderColor: "#e3d7cf",
+    borderColor: COLORS.dangerSoft,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
@@ -695,13 +696,13 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#6e6560",
+    color: COLORS.textMuted,
   },
   statusPill: {
     flexShrink: 0,
     minHeight: 36,
     borderRadius: 999,
-    backgroundColor: "#efe9e5",
+    backgroundColor: COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
   statusPillText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6b635e",
+    color: COLORS.textSoft,
   },
   friendList: {
     gap: 12,
@@ -725,7 +726,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     minHeight: 34,
     borderRadius: 999,
-    backgroundColor: "#efe9e5",
+    backgroundColor: COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
@@ -733,13 +734,13 @@ const styles = StyleSheet.create({
   friendBadgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6b635e",
+    color: COLORS.textSoft,
   },
   feedCard: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e7ddd6",
-    backgroundColor: "#fffdfb",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     padding: 14,
     marginBottom: 12,
   },
@@ -755,24 +756,24 @@ const styles = StyleSheet.create({
   feedOwner: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#2f2a27",
+    color: COLORS.text,
   },
   feedHandle: {
     marginTop: 2,
     fontSize: 13,
-    color: "#8a8079",
+    color: COLORS.textMuted,
   },
   feedProjectName: {
     marginTop: 12,
     fontSize: 18,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   feedCaption: {
     marginTop: 6,
     fontSize: 14,
     lineHeight: 20,
-    color: "#6f6660",
+    color: COLORS.textMuted,
   },
   previewRow: {
     flexDirection: "row",
@@ -783,16 +784,16 @@ const styles = StyleSheet.create({
     width: 84,
     height: 104,
     borderRadius: 14,
-    backgroundColor: "#e8e1da",
+    backgroundColor: COLORS.backgroundAlt,
   },
   feedMeta: {
     marginTop: 10,
     fontSize: 13,
-    color: "#8a8079",
+    color: COLORS.textMuted,
   },
   emptyText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#7f756f",
+    color: COLORS.textMuted,
   },
 });

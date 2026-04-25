@@ -1,5 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
+import { COLORS } from "../../constants/theme";
 import { useAuth } from "../../providers/AuthProvider";
 
 export default function AuthLayout() {
@@ -7,7 +8,14 @@ export default function AuthLayout() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#f5f1ed]">
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: COLORS.background,
+        }}
+      >
         <ActivityIndicator />
       </View>
     );

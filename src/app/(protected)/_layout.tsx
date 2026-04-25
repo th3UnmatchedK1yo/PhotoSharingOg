@@ -1,6 +1,7 @@
 import { Redirect, Stack, useSegments } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useEffect, useState } from "react";
+import { COLORS } from "../../constants/theme";
 import { useAuth } from "../../providers/AuthProvider";
 import { getMyProfile } from "../../services/profiles";
 
@@ -49,7 +50,14 @@ export default function ProtectedLayout() {
 
   if (loading || checkingProfile) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#f5f1ed]">
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: COLORS.background,
+        }}
+      >
         <ActivityIndicator />
       </View>
     );

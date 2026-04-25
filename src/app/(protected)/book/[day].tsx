@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getStampsByDay } from "../../../services/stamps";
 import type { Stamp } from "../../../types/stamp";
@@ -77,7 +78,7 @@ export default function DayScreen() {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Pressable style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#5f5a56" />
+          <Ionicons name="arrow-back" size={22} color={COLORS.textSoft} />
         </Pressable>
 
         <View style={styles.headerTextWrap}>
@@ -123,13 +124,13 @@ export default function DayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     paddingTop: 48,
     paddingHorizontal: 16,
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -143,9 +144,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -161,12 +162,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#827a75",
+    color: COLORS.textMuted,
     textAlign: "center",
     marginTop: 4,
   },
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   itemTitle: {
     marginTop: 10,
     fontSize: 15,
-    color: "#6f6862",
+    color: COLORS.textSoft,
     textAlign: "center",
     width: "100%",
   },
@@ -193,6 +194,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#827a75",
+    color: COLORS.textMuted,
   },
 });

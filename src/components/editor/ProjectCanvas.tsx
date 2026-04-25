@@ -17,6 +17,7 @@ import {
   BACKGROUND_MAP,
   FONT_OPTIONS,
 } from "../../constants/editorCatalog";
+import { COLORS } from "../../constants/theme";
 import { STAMP_OUTER_ASPECT } from "../../constants/stampTemplate";
 import type {
   AssetLayer,
@@ -539,9 +540,9 @@ const styles = StyleSheet.create({
     minHeight: 400,
   },
   board: {
-    backgroundColor: "#f8f7f3",
+    backgroundColor: COLORS.surfaceRaised,
     borderWidth: 1,
-    borderColor: "#e8e1da",
+    borderColor: COLORS.border,
   },
   emptyWrap: {
     flex: 1,
@@ -552,25 +553,25 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 8,
     textAlign: "center",
   },
   emptyText: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#7b746f",
+    color: COLORS.textMuted,
     textAlign: "center",
   },
   textChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.01)",
+    backgroundColor: COLORS.canvasTextChip,
   },
   textChipSelected: {
     borderWidth: 1,
-    borderColor: "rgba(95,90,86,0.35)",
-    backgroundColor: "rgba(255,255,255,0.32)",
+    borderColor: COLORS.canvasTextChipBorder,
+    backgroundColor: COLORS.canvasTextChipSelected,
   },
 });

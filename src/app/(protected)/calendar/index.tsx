@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
 import OverflowMenu from "../../../components/shared/OverFlowMenu";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getGroupedStamps } from "../../../services/stamps";
 import {
@@ -166,7 +167,7 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 42,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   scroll: {
     flex: 1,
@@ -206,21 +207,21 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
   monthButtonText: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   monthLabel: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   weekdaysRow: {
     flexDirection: "row",
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
     fontWeight: "600",
-    color: "#8c8682",
+    color: COLORS.textMuted,
   },
   grid: {
     gap: 10,
@@ -246,9 +247,9 @@ const styles = StyleSheet.create({
     width: "14%",
     aspectRatio: 0.75,
     borderRadius: 16,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     paddingTop: 10,
     alignItems: "center",
     justifyContent: "space-between",
@@ -258,31 +259,31 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   dayCellActive: {
-    borderColor: "#b8aea7",
-    backgroundColor: "#ffffff",
+    borderColor: COLORS.borderStrong,
+    backgroundColor: COLORS.surface,
   },
   dayNumber: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   dayNumberOutside: {
-    color: "#a8a09b",
+    color: COLORS.placeholder,
   },
   dayNumberActive: {
-    color: "#3f3a37",
+    color: COLORS.text,
   },
   badge: {
     minWidth: 24,
     height: 24,
     paddingHorizontal: 6,
     borderRadius: 12,
-    backgroundColor: "#5f5a56",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    color: "#fff",
+    color: COLORS.primaryText,
     fontSize: 12,
     fontWeight: "700",
   },

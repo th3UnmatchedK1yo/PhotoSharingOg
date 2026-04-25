@@ -11,6 +11,7 @@ import {
   BACKGROUND_MAP,
   FONT_OPTIONS,
 } from "../../constants/editorCatalog";
+import { COLORS } from "../../constants/theme";
 import type {
   AssetLayer,
   ProjectCanvasConfig,
@@ -293,9 +294,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   board: {
-    backgroundColor: "#f8f7f3",
+    backgroundColor: COLORS.surfaceRaised,
     borderWidth: 1,
-    borderColor: "#e8e1da",
+    borderColor: COLORS.border,
   },
   absoluteLayer: {
     position: "absolute",

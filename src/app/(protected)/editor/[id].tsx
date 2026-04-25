@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import EditorOptionsSheet from "../../../components/editor/EditorOptionsSheet";
 import ProjectCanvas from "../../../components/editor/ProjectCanvas";
+import { COLORS } from "../../../constants/theme";
 import { getProject, updateProjectDesign } from "../../../services/projects";
 import type {
   AssetLayer,
@@ -368,7 +369,7 @@ export default function ProjectDetailScreen() {
       text: "Your text",
       fontKey,
       fontSize: 24,
-      color: "#4f4a47",
+      color: COLORS.text,
       x: 0.15,
       y: 0.06,
       scale: 1,
@@ -450,7 +451,7 @@ export default function ProjectDetailScreen() {
     <View style={styles.screen}>
       <View style={styles.headerRow}>
         <Pressable style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#5f5a56" />
+          <Ionicons name="arrow-back" size={22} color={COLORS.textSoft} />
         </Pressable>
 
         <Text numberOfLines={1} style={styles.title}>
@@ -463,7 +464,7 @@ export default function ProjectDetailScreen() {
             router.push(`/editor/select-stamps?projectId=${project.id}`)
           }
         >
-          <Ionicons name="images-outline" size={22} color="#5f5a56" />
+          <Ionicons name="images-outline" size={22} color={COLORS.textSoft} />
         </Pressable>
       </View>
 
@@ -487,7 +488,7 @@ export default function ProjectDetailScreen() {
             setSheetOpen(true);
           }}
         >
-          <Ionicons name="image-outline" size={22} color="#5f5a56" />
+          <Ionicons name="image-outline" size={22} color={COLORS.textSoft} />
           <Text style={styles.toolLabel}>BG</Text>
         </Pressable>
 
@@ -498,7 +499,7 @@ export default function ProjectDetailScreen() {
             setSheetOpen(true);
           }}
         >
-          <Ionicons name="sparkles-outline" size={22} color="#5f5a56" />
+          <Ionicons name="sparkles-outline" size={22} color={COLORS.textSoft} />
           <Text style={styles.toolLabel}>Assets</Text>
         </Pressable>
 
@@ -509,7 +510,7 @@ export default function ProjectDetailScreen() {
             setSheetOpen(true);
           }}
         >
-          <Ionicons name="text-outline" size={22} color="#5f5a56" />
+          <Ionicons name="text-outline" size={22} color={COLORS.textSoft} />
           <Text style={styles.toolLabel}>Text</Text>
         </Pressable>
       </View>
@@ -543,7 +544,7 @@ export default function ProjectDetailScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -557,9 +558,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -568,7 +569,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   canvasWrap: {
     flex: 1,
@@ -582,8 +583,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingBottom: 28,
     borderTopWidth: 1,
-    borderTopColor: "#e5ddd7",
-    backgroundColor: "#fbf8f5",
+    borderTopColor: COLORS.border,
+    backgroundColor: COLORS.surface,
   },
   toolBtn: {
     alignItems: "center",
@@ -595,11 +596,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },

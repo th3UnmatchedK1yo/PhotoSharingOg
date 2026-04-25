@@ -26,6 +26,7 @@ import {
   shareProject,
   unshareProject,
 } from "../../../services/social";
+import { COLORS } from "../../../constants/theme";
 import type { ProjectSummary } from "../../../types/project";
 
 export default function EditorScreen() {
@@ -170,7 +171,7 @@ export default function EditorScreen() {
             ]}
             onPress={() => router.push("/friends")}
           >
-            <Ionicons name="people-outline" size={22} color="#5f5a56" />
+            <Ionicons name="people-outline" size={22} color={COLORS.textSoft} />
           </Pressable>
 
           <Pressable
@@ -180,7 +181,7 @@ export default function EditorScreen() {
             ]}
             onPress={() => setCreateOpen(true)}
           >
-            <Ionicons name="add" size={24} color="#5f5a56" />
+            <Ionicons name="add" size={24} color={COLORS.textSoft} />
           </Pressable>
         </View>
       </View>
@@ -216,7 +217,7 @@ export default function EditorScreen() {
                       <Text style={styles.projectStatus}>Active</Text>
                       {isShared && (
                         <View style={styles.sharedPill}>
-                          <Ionicons name="people" size={12} color="#5f5a56" />
+                          <Ionicons name="people" size={12} color={COLORS.textSoft} />
                           <Text style={styles.sharedPillText}>Shared</Text>
                         </View>
                       )}
@@ -241,7 +242,7 @@ export default function EditorScreen() {
                         <Ionicons
                           name={isShared ? "people" : "people-outline"}
                           size={18}
-                          color="#7b746f"
+                          color={COLORS.textMuted}
                         />
                       </Pressable>
 
@@ -259,7 +260,7 @@ export default function EditorScreen() {
                         <Ionicons
                           name="trash-outline"
                           size={18}
-                          color="#7b746f"
+                          color={COLORS.textMuted}
                         />
                       </Pressable>
 
@@ -274,7 +275,7 @@ export default function EditorScreen() {
                         ]}
                         onPress={() => router.push(`/editor/${project.id}`)}
                       >
-                        <Ionicons name="arrow-forward" size={18} color="#7b746f" />
+                        <Ionicons name="arrow-forward" size={18} color={COLORS.textMuted} />
                       </Pressable>
                     </View>
                   </View>
@@ -315,7 +316,7 @@ export default function EditorScreen() {
                     <Ionicons
                       name={isShared ? "lock-closed" : "lock-closed-outline"}
                       size={15}
-                      color="#847b75"
+                      color={COLORS.textMuted}
                     />
                     <Text style={styles.shareRowText}>
                       {isShared
@@ -344,7 +345,7 @@ export default function EditorScreen() {
               value={projectName}
               onChangeText={setProjectName}
               placeholder="Project name"
-              placeholderTextColor="#9b948e"
+              placeholderTextColor={COLORS.placeholder}
               style={styles.input}
             />
 
@@ -379,7 +380,7 @@ export default function EditorScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -397,13 +398,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
     lineHeight: 20,
-    color: "#7b746f",
+    color: COLORS.textMuted,
   },
   headerActions: {
     flexDirection: "row",
@@ -412,9 +413,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   headerCircle: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -433,33 +434,33 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 18,
-    color: "#7b746f",
+    color: COLORS.textMuted,
     marginBottom: 16,
   },
   emptyCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
   },
   emptyTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#7b746f",
+    color: COLORS.textMuted,
   },
   projectCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     marginBottom: 18,
   },
   projectTopRow: {
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   },
   projectStatus: {
     fontSize: 14,
-    color: "#8c8682",
+    color: COLORS.textMuted,
   },
   sharedPill: {
     flexDirection: "row",
@@ -488,12 +489,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "#ede7e3",
+    backgroundColor: COLORS.accentSoft,
   },
   sharedPillText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   projectActions: {
     flexDirection: "row",
@@ -504,36 +505,36 @@ const styles = StyleSheet.create({
   projectCount: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#7b746f",
+    color: COLORS.textMuted,
     minWidth: 12,
     textAlign: "center",
   },
   cardAction: {
     borderWidth: 1,
-    borderColor: "#e5ddd7",
-    backgroundColor: "#fff",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   cardActionShared: {
-    backgroundColor: "#ece7e3",
+    backgroundColor: COLORS.accentSoft,
   },
   projectName: {
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginTop: 8,
   },
   projectMeta: {
     fontSize: 16,
-    color: "#827a75",
+    color: COLORS.textMuted,
     marginTop: 4,
     marginBottom: 14,
   },
   previewBox: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
-    backgroundColor: "#fff",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     padding: 14,
     minHeight: 130,
     justifyContent: "center",
@@ -549,7 +550,7 @@ const styles = StyleSheet.create({
   },
   previewPlaceholder: {
     fontSize: 15,
-    color: "#8c8682",
+    color: COLORS.textMuted,
   },
   shareRow: {
     marginTop: 12,
@@ -561,11 +562,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
-    color: "#847b75",
+    color: COLORS.textMuted,
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.12)",
+    backgroundColor: COLORS.overlay,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
@@ -573,29 +574,29 @@ const styles = StyleSheet.create({
   modalCard: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
     borderRadius: 28,
     padding: 20,
   },
   modalTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111",
+    color: COLORS.text,
     marginBottom: 8,
   },
   modalText: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#666",
+    color: COLORS.textMuted,
     marginBottom: 16,
   },
   input: {
     height: 56,
     borderRadius: 18,
-    backgroundColor: "#f1eeeb",
+    backgroundColor: COLORS.backgroundAlt,
     paddingHorizontal: 18,
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 18,
   },
   modalActions: {
@@ -606,26 +607,26 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     borderRadius: 18,
-    backgroundColor: "#f1eeeb",
+    backgroundColor: COLORS.backgroundAlt,
     alignItems: "center",
     justifyContent: "center",
   },
   modalSecondaryText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   modalPrimaryBtn: {
     flex: 1,
     height: 52,
     borderRadius: 18,
-    backgroundColor: "#d8d3cf",
+    backgroundColor: COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   modalPrimaryText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
 });

@@ -13,6 +13,7 @@ import {
 import StampFrame from "../../../components/stamp/StampFrame";
 import BottomTabBar from "../../../components/shared/BottomTabBar";
 import OverflowMenu from "../../../components/shared/OverFlowMenu";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getGroupedStamps } from "../../../services/stamps";
 import type { Stamp } from "../../../types/stamp";
@@ -123,7 +124,7 @@ export default function BookScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   scroll: {
     flex: 1,
@@ -156,27 +157,27 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: "600",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 16,
   },
   addButton: {
-    backgroundColor: "#5f5a56",
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
   addButtonText: {
-    color: "#fff",
+    color: COLORS.primaryText,
     fontSize: 16,
     fontWeight: "600",
   },
   card: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: 18,
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
   },
   cardHeader: {
     marginBottom: 14,
@@ -184,12 +185,12 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 4,
   },
   countText: {
     fontSize: 16,
-    color: "#827a75",
+    color: COLORS.textMuted,
   },
   previewRow: {
     flexDirection: "row",

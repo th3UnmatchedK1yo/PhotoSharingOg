@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { COLORS, SHADOWS } from "../../constants/theme";
 
 type TabKey = "stamp" | "book" | "editor" | "calendar" | "friends";
 
@@ -43,7 +44,7 @@ export default function BottomTabBar({ active }: BottomTabBarProps) {
               <Ionicons
                 name={tab.icon}
                 size={22}
-                color={isActive ? "#1f1b19" : "#7a736e"}
+                color={isActive ? COLORS.text : COLORS.textMuted}
               />
               <Text style={[styles.label, isActive && styles.labelActive]}>
                 {tab.label}
@@ -65,16 +66,12 @@ const styles = StyleSheet.create({
   },
   bar: {
     flexDirection: "row",
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     padding: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    ...SHADOWS.soft,
   },
   item: {
     flex: 1,
@@ -85,14 +82,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   itemActive: {
-    backgroundColor: "#ece7e3",
+    backgroundColor: COLORS.accentSoft,
   },
   label: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#7a736e",
+    color: COLORS.textMuted,
   },
   labelActive: {
-    color: "#1f1b19",
+    color: COLORS.text,
   },
 });

@@ -3,6 +3,7 @@ import { Slot } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../../global.css";
+import { COLORS } from "../constants/theme";
 import { AuthProvider } from "../providers/AuthProvider";
 
 export default function RootLayout() {
@@ -17,7 +18,7 @@ export default function RootLayout() {
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#f5f1ed",
+          backgroundColor: COLORS.background,
         }}
       >
         <ActivityIndicator />

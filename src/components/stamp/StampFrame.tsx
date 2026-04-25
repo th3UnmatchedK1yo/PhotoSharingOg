@@ -14,6 +14,7 @@ import {
   STAMP_PHOTO_RECT,
   STAMP_TEMPLATE,
 } from "../../constants/stampTemplate";
+import { COLORS } from "../../constants/theme";
 
 type StampFrameProps = {
   uri: string;
@@ -68,8 +69,8 @@ export default function StampFrame({
         >
           <Path
             d={STAMP_OUTLINE_PATH}
-            fill="#fffdfb"
-            stroke="#d8d0ca"
+            fill={COLORS.surface}
+            stroke={COLORS.border}
             strokeWidth={4}
             strokeLinejoin="round"
           />
@@ -92,7 +93,7 @@ export default function StampFrame({
           width={STAMP_PHOTO_RECT.width}
           height={STAMP_PHOTO_RECT.height}
           fill="none"
-          stroke="rgba(255,255,255,0.55)"
+          stroke={COLORS.transparentWhite}
           strokeWidth={6}
         />
       </Svg>
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   shadow: {
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOpacity: 0.14,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },

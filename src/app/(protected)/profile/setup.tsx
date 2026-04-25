@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getMyProfile, updateMyProfile } from "../../../services/profiles";
 
@@ -77,7 +78,7 @@ export default function ProfileSetupScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={COLORS.primary} />
       </View>
     );
   }
@@ -99,7 +100,7 @@ export default function ProfileSetupScreen() {
           value={displayName}
           onChangeText={setDisplayName}
           placeholder="Your display name"
-          placeholderTextColor="#8f857d"
+          placeholderTextColor={COLORS.placeholder}
           style={styles.input}
         />
 
@@ -108,7 +109,7 @@ export default function ProfileSetupScreen() {
           value={username}
           onChangeText={setUsername}
           placeholder="username"
-          placeholderTextColor="#8f857d"
+          placeholderTextColor={COLORS.placeholder}
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
@@ -131,11 +132,11 @@ export default function ProfileSetupScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -145,25 +146,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   kicker: {
-    color: "#f0b63f",
+    color: COLORS.accent,
     fontSize: 15,
     fontWeight: "700",
     marginBottom: 10,
   },
   title: {
-    color: "#fff",
+    color: COLORS.text,
     fontSize: 34,
     fontWeight: "700",
     marginBottom: 10,
   },
   subtitle: {
-    color: "#b8aea8",
+    color: COLORS.textMuted,
     fontSize: 16,
     lineHeight: 22,
     marginBottom: 28,
   },
   label: {
-    color: "#f0b63f",
+    color: COLORS.textSoft,
     fontSize: 14,
     fontWeight: "700",
     marginBottom: 8,
@@ -173,9 +174,9 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#2c2724",
-    backgroundColor: "#191513",
-    color: "#fff",
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    color: COLORS.text,
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 8,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 56,
     borderRadius: 20,
-    backgroundColor: "#f0b63f",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 22,
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   primaryButtonText: {
-    color: "#2e2415",
+    color: COLORS.primaryText,
     fontSize: 18,
     fontWeight: "700",
   },

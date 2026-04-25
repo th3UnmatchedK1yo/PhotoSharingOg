@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { COLORS, SHADOWS } from "../../constants/theme";
 
 type OverflowMenuProps = {
   onSignOut: () => void;
@@ -14,7 +15,7 @@ export default function OverflowMenu({ onSignOut }: OverflowMenuProps) {
   return (
     <>
       <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
-        <Ionicons name="ellipsis-horizontal" size={22} color="#5f5a56" />
+        <Ionicons name="ellipsis-horizontal" size={22} color={COLORS.textSoft} />
       </Pressable>
 
       <Modal transparent visible={open} animationType="fade" onRequestClose={close}>
@@ -41,30 +42,26 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.06)",
+    backgroundColor: COLORS.overlay,
     paddingTop: 92,
     paddingRight: 24,
     alignItems: "flex-end",
   },
   menuCard: {
     minWidth: 170,
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    borderColor: COLORS.border,
+    ...SHADOWS.medium,
     overflow: "hidden",
   },
   menuItem: {
@@ -74,6 +71,6 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#c63b33",
+    color: COLORS.danger,
   },
 });

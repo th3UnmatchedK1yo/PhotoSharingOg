@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import {
   deleteStamp,
@@ -176,7 +177,7 @@ export default function BookStampDetailScreen() {
             onPress={() => router.back()}
             disabled={deleting || saving}
           >
-            <Ionicons name="close" size={22} color="#5f5a56" />
+            <Ionicons name="close" size={22} color={COLORS.textSoft} />
           </Pressable>
         </View>
 
@@ -194,7 +195,7 @@ export default function BookStampDetailScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="Give it a title"
-            placeholderTextColor="#b0a8a2"
+            placeholderTextColor={COLORS.placeholder}
             style={styles.titleInput}
             returnKeyType="next"
           />
@@ -208,7 +209,7 @@ export default function BookStampDetailScreen() {
             value={caption}
             onChangeText={setCaption}
             placeholder="Add a note..."
-            placeholderTextColor="#b0a8a2"
+            placeholderTextColor={COLORS.placeholder}
             style={styles.captionInput}
             multiline
             textAlignVertical="top"
@@ -234,7 +235,7 @@ export default function BookStampDetailScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingTop: 48,
@@ -244,13 +245,13 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
   loadingText: {
     fontSize: 16,
-    color: "#6f6862",
+    color: COLORS.textMuted,
   },
   headerRow: {
     flexDirection: "row",
@@ -261,9 +262,9 @@ const styles = StyleSheet.create({
   deletePill: {
     minHeight: 52,
     borderRadius: 26,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 22,
@@ -271,15 +272,15 @@ const styles = StyleSheet.create({
   deletePillText: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#c47761",
+    color: COLORS.danger,
   },
   circleButton: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -292,11 +293,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#ece7e3",
+    backgroundColor: COLORS.accentSoft,
   },
   dateChipText: {
     fontSize: 15,
-    color: "#8a8079",
+    color: COLORS.textMuted,
     fontWeight: "600",
   },
   formWrap: {
@@ -305,18 +306,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#5b5551",
+    color: COLORS.textSoft,
     marginBottom: 8,
   },
   titleInput: {
     height: 58,
     borderWidth: 1,
-    borderColor: "#ddd4ce",
+    borderColor: COLORS.border,
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 18,
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 18,
   },
   captionRow: {
@@ -327,18 +328,18 @@ const styles = StyleSheet.create({
   },
   optionalText: {
     fontSize: 16,
-    color: "#8c8682",
+    color: COLORS.textMuted,
   },
   captionInput: {
     minHeight: 140,
     borderWidth: 1,
-    borderColor: "#ddd4ce",
+    borderColor: COLORS.border,
     borderRadius: 20,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
   },
   bottomActions: {
     paddingTop: 16,
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   saveButton: {
     height: 56,
     borderRadius: 22,
-    backgroundColor: "#4a3d35",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -357,6 +358,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
+    color: COLORS.primaryText,
   },
 });

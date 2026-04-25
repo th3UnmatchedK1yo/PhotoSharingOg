@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { getProject, saveProjectStamps } from "../../../services/projects";
 import { getMyStamps } from "../../../services/stamps";
@@ -145,7 +146,7 @@ export default function SelectProjectStampsScreen() {
                     <Ionicons
                       name={selected ? "checkmark-circle" : "ellipse-outline"}
                       size={26}
-                      color={selected ? "#5f5a56" : "#b4ada8"}
+                      color={selected ? COLORS.primary : COLORS.placeholder}
                     />
                   </View>
                 </Pressable>
@@ -161,7 +162,7 @@ export default function SelectProjectStampsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -176,9 +177,9 @@ const styles = StyleSheet.create({
     minWidth: 74,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
@@ -186,14 +187,14 @@ const styles = StyleSheet.create({
   doneButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   title: {
     flex: 1,
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   scroll: {
     flex: 1,
@@ -203,10 +204,10 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   groupCard: {
-    backgroundColor: "#fbf8f5",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#e5ddd7",
+    borderColor: COLORS.border,
     overflow: "hidden",
     marginBottom: 18,
   },
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "#ece7e3",
+    borderBottomColor: COLORS.accentSoft,
   },
   rowText: {
     flex: 1,
@@ -227,12 +228,12 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#4f4a47",
+    color: COLORS.text,
   },
   rowSubtitle: {
     marginTop: 4,
     fontSize: 14,
-    color: "#7b746f",
+    color: COLORS.textMuted,
   },
   checkWrap: {
     width: 32,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },

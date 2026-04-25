@@ -1,7 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +15,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import StampFrame from "../../../components/stamp/StampFrame";
+import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import { saveRemoteStamp } from "../../../services/stamps";
 
@@ -25,6 +28,7 @@ export default function ReviewScreen() {
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [saving, setSaving] = useState(false);
+  const previewEnterProgress = useRef(new Animated.Value(0)).current;
 
   const previewSize = useMemo(() => {
     const maxByWidth = width - 80;
@@ -32,6 +36,17 @@ export default function ReviewScreen() {
 
     return Math.min(maxByWidth, maxPreview);
   }, [width, height]);
+
+  useEffect(() => {
+    previewEnterProgress.setValue(0);
+
+    Animated.timing(previewEnterProgress, {
+      toValue: 1,
+      duration: 360,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [previewEnterProgress, uri]);
 
   const onSave = async () => {
     if (!uri || saving) return;
@@ -83,9 +98,30 @@ export default function ReviewScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.previewArea}>
+        <Animated.View
+          style={[
+            styles.previewArea,
+            {
+              opacity: previewEnterProgress,
+              transform: [
+                {
+                  translateY: previewEnterProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [14, 0],
+                  }),
+                },
+                {
+                  scale: previewEnterProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.96, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <StampFrame uri={uri} size={previewSize} />
-        </View>
+        </Animated.View>
 
         <View style={styles.formArea}>
           <Text style={styles.fieldLabel}>Title</Text>
@@ -93,7 +129,7 @@ export default function ReviewScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="Give it a title"
-            placeholderTextColor="#a9a29d"
+            placeholderTextColor={COLORS.placeholder}
             style={styles.titleInput}
             returnKeyType="next"
           />
@@ -107,7 +143,7 @@ export default function ReviewScreen() {
             value={caption}
             onChangeText={setCaption}
             placeholder="Add a note..."
-            placeholderTextColor="#a9a29d"
+            placeholderTextColor={COLORS.placeholder}
             multiline
             style={styles.noteInput}
             textAlignVertical="top"
@@ -141,7 +177,7 @@ export default function ReviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -151,7 +187,7 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -165,18 +201,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#5b5551",
+    color: COLORS.textSoft,
     marginBottom: 8,
   },
   titleInput: {
     height: 58,
     borderWidth: 1,
-    borderColor: "#ddd4ce",
+    borderColor: COLORS.border,
     borderRadius: 18,
-    backgroundColor: "#fffdfb",
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 18,
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 18,
   },
   captionRow: {
@@ -186,18 +222,18 @@ const styles = StyleSheet.create({
   },
   optionalText: {
     fontSize: 16,
-    color: "#8c8682",
+    color: COLORS.textMuted,
   },
   noteInput: {
     minHeight: 140,
     borderWidth: 1,
-    borderColor: "#ddd4ce",
+    borderColor: COLORS.border,
     borderRadius: 20,
-    backgroundColor: "#fffdfb",
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 20,
   },
   actions: {
@@ -210,7 +246,7 @@ const styles = StyleSheet.create({
   secondaryBtn: {
     flex: 1,
     borderRadius: 20,
-    backgroundColor: "#ece7e3",
+    backgroundColor: COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 18,
@@ -218,12 +254,12 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#5f5a56",
+    color: COLORS.textSoft,
   },
   primaryBtn: {
     flex: 1,
     borderRadius: 20,
-    backgroundColor: "#5f5a56",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 18,
@@ -234,15 +270,15 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
+    color: COLORS.primaryText,
   },
   errorText: {
     fontSize: 18,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 12,
   },
   linkText: {
     fontSize: 16,
-    color: "#4c6ef5",
+    color: COLORS.primary,
   },
 });

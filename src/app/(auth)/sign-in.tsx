@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { COLORS } from "../../constants/theme";
 import { useAuth } from "../../providers/AuthProvider";
 
 export default function SignInScreen() {
@@ -50,7 +51,7 @@ export default function SignInScreen() {
         autoCapitalize="none"
         keyboardType="email-address"
         placeholder="Email"
-        placeholderTextColor="#9b948e"
+        placeholderTextColor={COLORS.placeholder}
         value={email}
         onChangeText={setEmail}
       />
@@ -60,14 +61,14 @@ export default function SignInScreen() {
         autoCapitalize="none"
         secureTextEntry
         placeholder="Password"
-        placeholderTextColor="#9b948e"
+        placeholderTextColor={COLORS.placeholder}
         value={password}
         onChangeText={setPassword}
       />
 
       <Pressable style={styles.primaryBtn} onPress={onSubmit} disabled={submitting}>
         {submitting ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={COLORS.primaryText} />
         ) : (
           <Text style={styles.primaryBtnText}>Sign In</Text>
         )}
@@ -85,49 +86,49 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f1ed",
+    backgroundColor: COLORS.background,
     justifyContent: "center",
     paddingHorizontal: 24,
   },
   title: {
     fontSize: 38,
     fontWeight: "700",
-    color: "#4f4a47",
+    color: COLORS.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 17,
-    color: "#7b746f",
+    color: COLORS.textMuted,
     marginBottom: 24,
   },
   input: {
     height: 56,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#ddd4ce",
+    borderColor: COLORS.border,
     paddingHorizontal: 18,
     fontSize: 16,
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 14,
   },
   primaryBtn: {
     height: 56,
     borderRadius: 18,
-    backgroundColor: "#5f5a56",
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
   },
   primaryBtnText: {
-    color: "#fff",
+    color: COLORS.primaryText,
     fontSize: 17,
     fontWeight: "600",
   },
   linkText: {
     marginTop: 18,
     textAlign: "center",
-    color: "#5f5a56",
+    color: COLORS.primary,
     fontSize: 16,
     fontWeight: "600",
   },
