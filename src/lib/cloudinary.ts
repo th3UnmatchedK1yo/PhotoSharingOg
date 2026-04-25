@@ -6,7 +6,11 @@ export type CloudinaryUploadResult = {
 };
 
 export const uploadToCloudinary = async (
-  fileUri: string
+  fileUri: string,
+  options?: {
+    fileName?: string;
+    fileType?: string;
+  },
 ): Promise<CloudinaryUploadResult> => {
   const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -22,8 +26,8 @@ export const uploadToCloudinary = async (
   const formData = new FormData();
   formData.append("file", {
     uri: fileUri,
-    type: "image/jpeg",
-    name: "stamp.jpg",
+    type: options?.fileType ?? "image/jpeg",
+    name: options?.fileName ?? "upload.jpg",
   } as unknown as Blob);
   formData.append("upload_preset", uploadPreset);
 

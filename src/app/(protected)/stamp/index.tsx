@@ -755,9 +755,20 @@ export default function StampCameraScreen() {
           onPress={() => router.push("/profile")}
           disabled={isTakingPhoto}
         >
-          <Text style={styles.avatarText}>
-            {getInitial(profile, user?.email)}
-          </Text>
+          {profile?.avatarUrl ? (
+            <Image
+              source={{ uri: profile.avatarUrl }}
+              style={{
+                width: topControlSize,
+                height: topControlSize,
+                borderRadius: topControlSize / 2,
+              }}
+            />
+          ) : (
+            <Text style={styles.avatarText}>
+              {getInitial(profile, user?.email)}
+            </Text>
+          )}
         </Pressable>
 
         <Pressable
@@ -1016,6 +1027,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
     ...SHADOWS.soft,
   },
   avatarText: {

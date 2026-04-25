@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -16,9 +17,11 @@ import { COLORS } from "../../../constants/theme";
 import { useAuth } from "../../../providers/AuthProvider";
 import {
   getMyProfile,
+  updateMyProfileAvatar,
   updateMyProfile,
   type MyProfile,
 } from "../../../services/profiles";
+import { uploadProfileImage } from "../../../services/upload";
 
 function getInitial(profile: MyProfile | null, email?: string | null) {
   const source =
@@ -36,6 +39,7 @@ export default function ProfileScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -79,6 +83,44 @@ export default function ProfileScreen() {
     }
   };
 
+  const onChangeAvatar = async () => {
+    if (!user || avatarUploading) return;
+
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Photo access needed",
+          "Allow photo access so you can choose a profile picture.",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.86,
+      });
+
+      if (result.canceled || !result.assets[0]?.uri) return;
+
+      setAvatarUploading(true);
+
+      const uploaded = await uploadProfileImage(result.assets[0].uri);
+      await updateMyProfileAvatar(user.id, uploaded.imageUrl);
+      await loadProfile();
+
+      Alert.alert("Updated", "Your profile picture has been updated.");
+    } catch (error) {
+      console.log("update avatar error:", error);
+      Alert.alert("Error", "Failed to update profile picture.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const onSignOut = async () => {
     try {
       await signOut();
@@ -111,15 +153,32 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.avatarWrap}>
-        {profile?.avatarUrl ? (
-          <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarFallback}>
-            <Text style={styles.avatarFallbackText}>
-              {getInitial(profile, user?.email)}
-            </Text>
+        <Pressable
+          style={styles.avatarButton}
+          onPress={onChangeAvatar}
+          disabled={avatarUploading}
+        >
+          {profile?.avatarUrl ? (
+            <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarFallbackText}>
+                {getInitial(profile, user?.email)}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.avatarEditBadge}>
+            {avatarUploading ? (
+              <ActivityIndicator color={COLORS.primaryText} size="small" />
+            ) : (
+              <Ionicons name="camera" size={18} color={COLORS.primaryText} />
+            )}
           </View>
-        )}
+        </Pressable>
+        <Text style={styles.avatarHint}>
+          {avatarUploading ? "Uploading photo..." : "Tap to update photo"}
+        </Text>
       </View>
 
       <Text style={styles.nameText}>
@@ -212,7 +271,11 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     alignItems: "center",
-    marginBottom: 18,
+    marginBottom: 14,
+  },
+  avatarButton: {
+    position: "relative",
+    marginBottom: 10,
   },
   avatarImage: {
     width: 140,
@@ -236,6 +299,24 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 54,
     fontWeight: "700",
+  },
+  avatarEditBadge: {
+    position: "absolute",
+    right: 4,
+    bottom: 4,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.primary,
+    borderWidth: 3,
+    borderColor: COLORS.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarHint: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    fontWeight: "600",
   },
   nameText: {
     textAlign: "center",

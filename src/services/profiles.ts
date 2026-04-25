@@ -143,3 +143,14 @@ export async function updateMyProfile(
     throw error;
   }
 }
+
+export async function updateMyProfileAvatar(userId: string, avatarUrl: string) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
