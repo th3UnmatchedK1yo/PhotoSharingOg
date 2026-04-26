@@ -137,46 +137,48 @@ npm run web
 
 Screens from a real phone session:
 
+> To show images on GitHub, screenshot files must be inside this repository (for example in `assets/screenshots/`) and committed to git.
+
 ### Sign In
 
-![Sign In Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390984434_0ae055ecbcaf6e3b36178d1fb61b45b5-37f266ec-bc86-45de-829d-0070e2a59ee7.png)
+![Sign In Screen](assets/screenshots/sign-in.png)
 
 ### Stamp Camera
 
-![Stamp Camera Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390984435_0c2edf71fbc66b90595a499e199fc064-91d30f3f-78cb-41a1-b4ce-04eebbfcff8d.png)
+![Stamp Camera Screen](assets/screenshots/stamp-camera.png)
 
 ### Collections
 
-![Collections Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390987850_6d9b313dd277cb385a0c74d49a372880-73851717-0dcf-47a4-9900-c1608694ce54.png)
+![Collections Screen](assets/screenshots/collections.png)
 
 ### Editor
 
-![Editor Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390990708_f5fe92765522fd50eb5e1312fa8f72d0-bf691708-d6f5-4b76-adf4-f50f8b2658ee.png)
+![Editor Screen](assets/screenshots/editor.png)
 
 ### Calendar
 
-![Calendar Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390996607_6cf911338639feb1dc61cffe2b24d41e-39aca4d9-5181-40bd-8992-d21194ed4976.png)
+![Calendar Screen](assets/screenshots/calendar.png)
 
 ### Profile Setup
 
-![Profile Setup Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390996529_a29081c358811240a743b2f110b25bbf-15b40b06-2ea1-4a2b-a471-ee7c6ab1529b.png)
+![Profile Setup Screen](assets/screenshots/profile-setup.png)
 
 ### Friends
 
-![Friends Screen](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765390996733_38bfa573c04257f9848f13a7e3a2e1e4-7ffbfc12-0f16-4537-b1ca-4e003424901a.png)
+![Friends Screen](assets/screenshots/friends.png)
 
 ### App Icon (On Device)
 
-![App Icon on Phone](C:/Users/Legion/.cursor/projects/c-Users-Legion-Documents-PhotoSharingOg-PhotoSharing/assets/c__Users_Legion_AppData_Roaming_Cursor_User_workspaceStorage_94fa25c4bda900e5ff4d3c6469f7564b_images_z7765391006355_d97dd30bf71c18e93bafb50a7733232d-1351b55a-9943-4e3c-9ee3-bf14ede8bc1c.png)
+![App Icon on Phone](assets/screenshots/app-icon-on-device.png)
 
 ## Download APK
 
 Try the latest Android build here:
 
-- [Download PhotoSharing APK](C:/Users/Legion/Downloads/application-9bede56c-0c2d-48e3-b1a5-f7d6f23c620c.apk)
+- [Download PhotoSharing APK (Google Drive)](https://drive.google.com/file/d/1t5mFi4pkkzZKUSDuFsrCpQSqhvIl3Bzl/view?usp=sharing)
 
-> Note: This is a local file path on the author's machine.  
-> For public readers (e.g., GitHub), upload the APK to a release or cloud storage and replace this link with a public URL.
+> Tip: for easier mobile downloads, you can also provide a direct-download URL format:
+> `https://drive.google.com/uc?export=download&id=1t5mFi4pkkzZKUSDuFsrCpQSqhvIl3Bzl`
 
 ## Environment Variables
 
