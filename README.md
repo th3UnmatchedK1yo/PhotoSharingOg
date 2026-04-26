@@ -141,35 +141,35 @@ Screens from a real phone session:
 
 ### Sign In
 
-![Sign In Screen](assets/screenshots/sign-in.png)
+<img src="assets/screenshots/sign-in.png" alt="Sign In Screen" width="280" />
 
 ### Stamp Camera
 
-![Stamp Camera Screen](assets/screenshots/stamp-camera.png)
+<img src="assets/screenshots/stamp-camera.png" alt="Stamp Camera Screen" width="280" />
 
 ### Collections
 
-![Collections Screen](assets/screenshots/collections.png)
+<img src="assets/screenshots/collections.png" alt="Collections Screen" width="280" />
 
 ### Editor
 
-![Editor Screen](assets/screenshots/editor.png)
+<img src="assets/screenshots/editor.png" alt="Editor Screen" width="280" />
 
 ### Calendar
 
-![Calendar Screen](assets/screenshots/calendar.png)
+<img src="assets/screenshots/calendar.png" alt="Calendar Screen" width="280" />
 
 ### Profile Setup
 
-![Profile Setup Screen](assets/screenshots/profile-setup.png)
+<img src="assets/screenshots/profile-setup.png" alt="Profile Setup Screen" width="280" />
 
 ### Friends
 
-![Friends Screen](assets/screenshots/friends.png)
+<img src="assets/screenshots/friends.png" alt="Friends Screen" width="280" />
 
 ### App Icon (On Device)
 
-![App Icon on Phone](assets/screenshots/app-icon-on-device.png)
+<img src="assets/screenshots/app-icon-on-device.png" alt="App Icon on Phone" width="280" />
 
 ## Download APK
 
