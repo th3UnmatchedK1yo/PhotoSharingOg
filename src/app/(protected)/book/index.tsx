@@ -1,4 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,6 +27,7 @@ export default function BookScreen() {
 
   const [grouped, setGrouped] = useState<Record<string, Stamp[]>>({});
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   const titleSize = width < 390 ? 36 : 42;
   const previewSize = width < 390 ? 80 : 90;
@@ -61,13 +63,61 @@ export default function BookScreen() {
     }
   };
 
+  const onUploadImage = async () => {
+    if (uploading) return;
+
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Photo access needed",
+          "Allow photo access so you can upload an image to your collection.",
+        );
+        return;
+      }
+
+      setUploading(true);
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 0.9,
+      });
+
+      if (result.canceled || !result.assets[0]?.uri) return;
+
+      router.push({
+        pathname: "/stamp/review",
+        params: { uri: result.assets[0].uri },
+      });
+    } catch (error) {
+      console.log("collection upload image error:", error);
+      Alert.alert("Error", "Failed to choose an image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const dayKeys = Object.keys(grouped).sort((a, b) => (a < b ? 1 : -1));
 
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
         <Text style={[styles.title, { fontSize: titleSize }]}>Collections</Text>
-        <OverflowMenu onSignOut={onSignOut} />
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.uploadButton}
+            onPress={onUploadImage}
+            disabled={uploading}
+          >
+            <Text style={styles.uploadButtonText}>
+              {uploading ? "Opening..." : "Upload"}
+            </Text>
+          </Pressable>
+          <OverflowMenu onSignOut={onSignOut} />
+        </View>
       </View>
 
       {loading ? (
@@ -78,7 +128,20 @@ export default function BookScreen() {
         <View style={styles.center}>
           <Text style={styles.emptyTitle}>Your Book is empty</Text>
 
-          <Pressable style={styles.addButton} onPress={() => router.push("/stamp")}>
+          <Pressable
+            style={[styles.addButton, styles.uploadEmptyButton]}
+            onPress={onUploadImage}
+            disabled={uploading}
+          >
+            <Text style={styles.addButtonText}>
+              {uploading ? "Opening..." : "Upload an image"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.addButton}
+            onPress={() => router.push("/stamp")}
+          >
             <Text style={styles.addButtonText}>Take your first stamp</Text>
           </Pressable>
         </View>
@@ -135,6 +198,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 16,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   title: {
     flex: 1,
     fontWeight: "700",
@@ -166,10 +234,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
+  uploadEmptyButton: {
+    marginBottom: 10,
+  },
   addButtonText: {
     color: COLORS.primaryText,
     fontSize: 16,
     fontWeight: "600",
+  },
+  uploadButton: {
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  uploadButtonText: {
+    color: COLORS.primaryText,
+    fontSize: 15,
+    fontWeight: "700",
   },
   card: {
     backgroundColor: COLORS.surface,

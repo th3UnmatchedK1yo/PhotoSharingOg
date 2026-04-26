@@ -33,6 +33,8 @@ type EditorOptionsSheetProps = {
   selectedBackground: string;
   onSelectBackground: (key: string) => void;
   onAddAsset: (assetKey: string) => void;
+  onAddUploadedImage: () => void;
+  uploadingImage: boolean;
   onAddText: (fontKey: FontKey) => void;
   textLayers: TextOption[];
   selectedTextLayerId: string | null;
@@ -52,6 +54,8 @@ export default function EditorOptionsSheet({
   selectedBackground,
   onSelectBackground,
   onAddAsset,
+  onAddUploadedImage,
+  uploadingImage,
   onAddText,
   textLayers,
   selectedTextLayerId,
@@ -79,20 +83,25 @@ export default function EditorOptionsSheet({
         <View style={styles.sheet}>
           <View style={styles.headerRow}>
             <Pressable
-              style={[
-                styles.doneButton,
-                isNarrow && styles.doneButtonNarrow,
-              ]}
+              style={[styles.doneButton, isNarrow && styles.doneButtonNarrow]}
               onPress={onClose}
             >
               <Text style={styles.doneText}>Done</Text>
             </Pressable>
 
-            <Text numberOfLines={1} style={[styles.title, isNarrow && styles.titleNarrow]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.title, isNarrow && styles.titleNarrow]}
+            >
               Edit Canvas
             </Text>
 
-            <View style={[styles.doneButtonPlaceholder, isNarrow && styles.doneButtonNarrow]} />
+            <View
+              style={[
+                styles.doneButtonPlaceholder,
+                isNarrow && styles.doneButtonNarrow,
+              ]}
+            />
           </View>
 
           <View style={styles.segmented}>
@@ -158,35 +167,49 @@ export default function EditorOptionsSheet({
               </View>
             )}
 
-            {activeTab === "assets" &&
-              ASSET_SECTIONS.map((section) => (
-                <View key={section.title} style={styles.assetSection}>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
-                  <View style={styles.assetGrid}>
-                    {section.items.map((item) => (
-                      <Pressable
-                        key={item.key}
-                        style={styles.assetCard}
-                        onPress={() => onAddAsset(item.key)}
-                      >
-                        <Image
-                          source={item.source}
-                          style={styles.assetPreview}
-                          resizeMode="contain"
-                        />
-                      </Pressable>
-                    ))}
+            {activeTab === "assets" && (
+              <View>
+                <Pressable
+                  style={styles.uploadAssetCard}
+                  onPress={onAddUploadedImage}
+                  disabled={uploadingImage}
+                >
+                  <Text style={styles.uploadAssetTitle}>
+                    {uploadingImage ? "Uploading..." : "Upload image"}
+                  </Text>
+                  <Text style={styles.uploadAssetText}>
+                    Add a photo from your device to this canvas.
+                  </Text>
+                </Pressable>
+
+                {ASSET_SECTIONS.map((section) => (
+                  <View key={section.title} style={styles.assetSection}>
+                    <Text style={styles.sectionTitle}>{section.title}</Text>
+                    <View style={styles.assetGrid}>
+                      {section.items.map((item) => (
+                        <Pressable
+                          key={item.key}
+                          style={styles.assetCard}
+                          onPress={() => onAddAsset(item.key)}
+                        >
+                          <Image
+                            source={item.source}
+                            style={styles.assetPreview}
+                            resizeMode="contain"
+                          />
+                        </Pressable>
+                      ))}
+                    </View>
                   </View>
-                </View>
-              ))}
+                ))}
+              </View>
+            )}
 
             {activeTab === "text" && (
               <View>
                 <View style={styles.textHeaderRow}>
                   <Text style={styles.sectionTitle}>Text Layers</Text>
-                  <Text style={styles.helperText}>
-                    Tap a layer to edit it
-                  </Text>
+                  <Text style={styles.helperText}>Tap a layer to edit it</Text>
                 </View>
 
                 <View style={styles.textLayerList}>
@@ -426,6 +449,25 @@ const styles = StyleSheet.create({
   },
   assetSection: {
     marginBottom: 20,
+  },
+  uploadAssetCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    padding: 16,
+    marginBottom: 20,
+  },
+  uploadAssetTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 6,
+  },
+  uploadAssetText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: COLORS.textMuted,
   },
   assetGrid: {
     flexDirection: "row",

@@ -69,9 +69,17 @@ export default function StampFrame({
         >
           <Path
             d={STAMP_OUTLINE_PATH}
-            fill={COLORS.surface}
-            stroke={COLORS.border}
-            strokeWidth={4}
+            fill="none"
+            stroke={COLORS.shadow}
+            strokeWidth={16}
+            strokeLinejoin="round"
+            opacity={0.08}
+          />
+          <Path
+            d={STAMP_OUTLINE_PATH}
+            fill={COLORS.stampPaper}
+            stroke={COLORS.stampBorder}
+            strokeWidth={9}
             strokeLinejoin="round"
           />
         </G>
@@ -93,8 +101,8 @@ export default function StampFrame({
           width={STAMP_PHOTO_RECT.width}
           height={STAMP_PHOTO_RECT.height}
           fill="none"
-          stroke={COLORS.transparentWhite}
-          strokeWidth={6}
+          stroke={COLORS.stampPhotoBorder}
+          strokeWidth={12}
         />
       </Svg>
     </View>
@@ -107,9 +115,9 @@ const styles = StyleSheet.create({
   },
   shadow: {
     shadowColor: COLORS.shadow,
-    shadowOpacity: 0.14,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 7,
   },
 });

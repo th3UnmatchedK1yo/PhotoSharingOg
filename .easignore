@@ -1,0 +1,38 @@
+# .easignore: files to exclude when uploading to EAS Build.
+# When this file exists, it REPLACES .gitignore for EAS uploads,
+# so we mirror .gitignore first and then add extras.
+
+# --- mirrors .gitignore ---
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.env.local
+.env*.local
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+*.tsbuildinfo
+/ios
+/android
+
+# --- EAS-only extras (things git tracks/allows but EAS doesn't need) ---
+.git/
+.github/
+.vscode/
+.idea/
+.cursor/
+*.log
+*.md
+docs/

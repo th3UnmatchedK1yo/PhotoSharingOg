@@ -31,8 +31,12 @@ const STAMP_BASE_HEIGHT = Math.round(STAMP_BASE_WIDTH * 1.25);
 const BASE_DECORATION_LONG_SIDE = 92;
 const BACKGROUND_ASPECT_RATIO = 1587 / 2245;
 
-function resolveEditorImageSource(key: string) {
-  return ASSET_MAP[key] ?? BACKGROUND_MAP[key];
+function resolveEditorImageSource(layer: AssetLayer) {
+  if (layer.imageUri) {
+    return { uri: layer.imageUri };
+  }
+
+  return ASSET_MAP[layer.assetKey] ?? BACKGROUND_MAP[layer.assetKey];
 }
 
 function isBackgroundAssetKey(key: string) {
@@ -54,15 +58,13 @@ function getBackgroundBaseSize(canvasWidth: number, canvasHeight: number) {
   return { width, height };
 }
 
-function getDecorationBaseSize(assetKey: string) {
-  const source = resolveEditorImageSource(assetKey);
-  if (!source) {
-    return { width: 0, height: 0 };
-  }
+function getDecorationBaseSize(layer: AssetLayer) {
+  const source = resolveEditorImageSource(layer);
+  if (!source) return { width: 0, height: 0 };
 
   const resolved = Image.resolveAssetSource(source);
-  const intrinsicWidth = resolved?.width || 100;
-  const intrinsicHeight = resolved?.height || 100;
+  const intrinsicWidth = layer.imageWidth || resolved?.width || 100;
+  const intrinsicHeight = layer.imageHeight || resolved?.height || 100;
 
   if (intrinsicWidth >= intrinsicHeight) {
     const width = BASE_DECORATION_LONG_SIDE;
@@ -126,12 +128,12 @@ function AssetLayerView({
   canvasWidth: number;
   canvasHeight: number;
 }) {
-  const source = resolveEditorImageSource(layer.assetKey);
+  const source = resolveEditorImageSource(layer);
   if (!source) return null;
 
   const { width, height } = isBackgroundAssetKey(layer.assetKey)
     ? getBackgroundBaseSize(canvasWidth, canvasHeight)
-    : getDecorationBaseSize(layer.assetKey);
+    : getDecorationBaseSize(layer);
 
   return (
     <View

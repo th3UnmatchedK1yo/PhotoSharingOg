@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import EditorOptionsSheet from "../../../components/editor/EditorOptionsSheet";
 import ProjectCanvas from "../../../components/editor/ProjectCanvas";
 import { COLORS } from "../../../constants/theme";
 import { getProject, updateProjectDesign } from "../../../services/projects";
+import { uploadEditorImage } from "../../../services/upload";
 import type {
   AssetLayer,
   FontKey,
@@ -123,6 +125,7 @@ export default function ProjectDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SheetTab>("backgrounds");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedTextLayerId, setSelectedTextLayerId] = useState<string | null>(
     null,
   );
@@ -209,7 +212,9 @@ export default function ProjectDetailScreen() {
 
     if (
       selectedTextLayerId &&
-      project.canvas.textLayers.some((layer) => layer.id === selectedTextLayerId)
+      project.canvas.textLayers.some(
+        (layer) => layer.id === selectedTextLayerId,
+      )
     ) {
       return;
     }
@@ -361,6 +366,60 @@ export default function ProjectDetailScreen() {
     saveCanvas(updatedCanvas);
   };
 
+  const onAddUploadedImage = async () => {
+    if (!project || uploadingImage) return;
+
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Photo access needed",
+          "Allow photo access so you can add an image to the editor.",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: false,
+        quality: 0.9,
+      });
+
+      if (result.canceled || !result.assets[0]?.uri) return;
+
+      setUploadingImage(true);
+      const picked = result.assets[0];
+      const uploaded = await uploadEditorImage(picked.uri);
+
+      const newLayer: AssetLayer = {
+        id: `al-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        assetKey: "uploaded-image",
+        imageUri: uploaded.imageUrl,
+        imageWidth: picked.width,
+        imageHeight: picked.height,
+        x: 0.18,
+        y: 0.18,
+        scale: 1,
+        rotation: 0,
+        z: getMaxZ(project.canvas) + 1,
+      };
+
+      const updatedCanvas: ProjectCanvasConfig = {
+        ...project.canvas,
+        assetLayers: [...project.canvas.assetLayers, newLayer],
+      };
+
+      await saveCanvas(updatedCanvas);
+    } catch (error) {
+      console.log("editor upload image error:", error);
+      Alert.alert("Error", "Failed to upload image to the editor.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const onAddText = (fontKey: FontKey) => {
     if (!project) return;
 
@@ -444,8 +503,9 @@ export default function ProjectDetailScreen() {
   }
 
   const selectedTextLayer =
-    project.canvas.textLayers.find((layer) => layer.id === selectedTextLayerId) ??
-    null;
+    project.canvas.textLayers.find(
+      (layer) => layer.id === selectedTextLayerId,
+    ) ?? null;
 
   return (
     <View style={styles.screen}>
@@ -523,6 +583,8 @@ export default function ProjectDetailScreen() {
         selectedBackground={getSelectedBackgroundKey(project)}
         onSelectBackground={onChangeBackground}
         onAddAsset={onAddAsset}
+        onAddUploadedImage={onAddUploadedImage}
+        uploadingImage={uploadingImage}
         onAddText={onAddText}
         textLayers={project.canvas.textLayers.map((layer) => ({
           id: layer.id,

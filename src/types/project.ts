@@ -15,6 +15,9 @@ export type StampLayer = {
 export type AssetLayer = {
   id: string;
   assetKey: string;
+  imageUri?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   x: number;
   y: number;
   scale: number;

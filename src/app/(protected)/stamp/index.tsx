@@ -519,6 +519,17 @@ export default function StampCameraScreen() {
     useCallback(() => {
       let active = true;
 
+      setIsTakingPhoto(false);
+      setFlightUri(null);
+      shutterFlashProgress.setValue(0);
+      stampFlightProgress.setValue(0);
+      cutterPressProgress.setValue(0);
+      uiCaptureProgress.setValue(0);
+
+      cameraRef.current?.resumePreview().catch((error) => {
+        console.log("resumePreview(focus) error:", error);
+      });
+
       const loadMeta = async () => {
         if (!user) return;
 
@@ -542,7 +553,13 @@ export default function StampCameraScreen() {
       return () => {
         active = false;
       };
-    }, [user]),
+    }, [
+      cutterPressProgress,
+      shutterFlashProgress,
+      stampFlightProgress,
+      uiCaptureProgress,
+      user,
+    ]),
   );
 
   const takePicture = async () => {

@@ -152,7 +152,7 @@ export default function ReviewScreen() {
           <View style={styles.actions}>
             <Pressable
               style={styles.secondaryBtn}
-              onPress={() => router.back()}
+              onPress={() => router.replace("/stamp")}
               disabled={saving}
             >
               <Text style={styles.secondaryBtnText}>Retake</Text>
