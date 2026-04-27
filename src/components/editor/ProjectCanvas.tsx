@@ -45,6 +45,7 @@ type ProjectCanvasProps = {
   onAssetDoubleTap?: (layerId: string) => void;
   onTextDoubleTap?: (layerId: string) => void;
   onTextPress?: (layerId: string) => void;
+  onCanvasPress?: () => void;
   selectedTextLayerId?: string | null;
 };
 
@@ -60,7 +61,11 @@ const BACKGROUND_ASPECT_RATIO = 1587 / 2245;
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 4;
 const RAD_TO_DEG = 180 / Math.PI;
-const ALIGN_THRESHOLD = 7;
+const SNAP_THRESHOLD = 8;
+const SNAP_GRID_COLUMNS = 4;
+const SNAP_GRID_ROWS = 6;
+const TEXT_HORIZONTAL_PADDING = 8;
+const TEXT_VERTICAL_PADDING = 4;
 
 function clamp(value: number, min: number, max: number) {
   "worklet";
@@ -124,10 +129,59 @@ function getDecorationBaseSize(layer: AssetLayer) {
 }
 
 function getTextBaseSize(layer: TextLayer) {
-  const safeText = layer.text?.trim() || "Text";
-  const width = Math.max(88, safeText.length * layer.fontSize * 0.56);
-  const height = Math.max(42, layer.fontSize * 1.55);
-  return { width, height };
+  const safeText = layer.text || "Text";
+  const lines = safeText.split(/\r?\n/);
+  const longestLine = lines.reduce(
+    (longest, line) => (line.length > longest.length ? line : longest),
+    "",
+  );
+  const isScriptFont =
+    layer.fontKey === "fz-kingshare" ||
+    layer.fontKey === "blosta-script" ||
+    layer.fontKey === "pinyon-script";
+  const widthFactor = isScriptFont ? 1.08 : 0.68;
+  const lineHeight = layer.fontSize * (isScriptFont ? 1.75 : 1.28);
+  const textWidth = Math.max(34, longestLine.length * layer.fontSize * widthFactor);
+  const width = textWidth + TEXT_HORIZONTAL_PADDING * 2;
+  const height = lines.length * lineHeight + TEXT_VERTICAL_PADDING * 2;
+  return { width, height, lineHeight, textWidth };
+}
+
+function snapLayerToGrid(params: {
+  rawLeftPx: number;
+  rawTopPx: number;
+  layerWidth: number;
+  layerHeight: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}) {
+  "worklet";
+
+  let nextLeftPx = params.rawLeftPx;
+  let nextTopPx = params.rawTopPx;
+  const centerX = params.rawLeftPx + params.layerWidth / 2;
+  const centerY = params.rawTopPx + params.layerHeight / 2;
+
+  for (let index = 1; index < SNAP_GRID_COLUMNS; index += 1) {
+    const gridX = (params.canvasWidth / SNAP_GRID_COLUMNS) * index;
+    if (Math.abs(centerX - gridX) <= SNAP_THRESHOLD) {
+      nextLeftPx = gridX - params.layerWidth / 2;
+      break;
+    }
+  }
+
+  for (let index = 1; index < SNAP_GRID_ROWS; index += 1) {
+    const gridY = (params.canvasHeight / SNAP_GRID_ROWS) * index;
+    if (Math.abs(centerY - gridY) <= SNAP_THRESHOLD) {
+      nextTopPx = gridY - params.layerHeight / 2;
+      break;
+    }
+  }
+
+  return {
+    leftPx: nextLeftPx,
+    topPx: nextTopPx,
+  };
 }
 
 function clampLayerLeft(
@@ -194,8 +248,6 @@ function TransformableLayer({
   const dragY = useSharedValue(0);
   const pinchScale = useSharedValue(1);
   const rotateDeg = useSharedValue(0);
-  const showVerticalGuide = useSharedValue(0);
-  const showHorizontalGuide = useSharedValue(0);
 
   useEffect(() => {
     xSv.value = x;
@@ -219,16 +271,16 @@ function TransformableLayer({
 
     const finalWidth = baseWidth * nextScale;
     const finalHeight = baseHeight * nextScale;
-    const layerCenterX = rawLeftPx + finalWidth / 2;
-    const layerCenterY = rawTopPx + finalHeight / 2;
-
-    if (Math.abs(layerCenterX - canvasWidth / 2) <= ALIGN_THRESHOLD) {
-      rawLeftPx = canvasWidth / 2 - finalWidth / 2;
-    }
-
-    if (Math.abs(layerCenterY - canvasHeight / 2) <= ALIGN_THRESHOLD) {
-      rawTopPx = canvasHeight / 2 - finalHeight / 2;
-    }
+    const snapped = snapLayerToGrid({
+      rawLeftPx,
+      rawTopPx,
+      layerWidth: finalWidth,
+      layerHeight: finalHeight,
+      canvasWidth,
+      canvasHeight,
+    });
+    rawLeftPx = snapped.leftPx;
+    rawTopPx = snapped.topPx;
 
     const clampedLeftPx = clampLayerLeft(rawLeftPx, canvasWidth, finalWidth);
     const clampedTopPx = clampLayerTop(rawTopPx, canvasHeight, finalHeight);
@@ -245,8 +297,6 @@ function TransformableLayer({
     dragY.value = 0;
     pinchScale.value = 1;
     rotateDeg.value = 0;
-    showVerticalGuide.value = 0;
-    showHorizontalGuide.value = 0;
 
     runOnJS(onTransformEnd)({
       x: nextX,
@@ -267,15 +317,19 @@ function TransformableLayer({
         MIN_SCALE,
         MAX_SCALE,
       );
-      const nextLeftPx = xSv.value * canvasWidth + event.translationX;
-      const nextTopPx = ySv.value * canvasHeight + event.translationY;
-      const centerX = nextLeftPx + (baseWidth * nextScale) / 2;
-      const centerY = nextTopPx + (baseHeight * nextScale) / 2;
+      const rawLeftPx = xSv.value * canvasWidth + event.translationX;
+      const rawTopPx = ySv.value * canvasHeight + event.translationY;
+      const snapped = snapLayerToGrid({
+        rawLeftPx,
+        rawTopPx,
+        layerWidth: baseWidth * nextScale,
+        layerHeight: baseHeight * nextScale,
+        canvasWidth,
+        canvasHeight,
+      });
 
-      showVerticalGuide.value =
-        Math.abs(centerX - canvasWidth / 2) <= ALIGN_THRESHOLD ? 1 : 0;
-      showHorizontalGuide.value =
-        Math.abs(centerY - canvasHeight / 2) <= ALIGN_THRESHOLD ? 1 : 0;
+      dragX.value = snapped.leftPx - xSv.value * canvasWidth;
+      dragY.value = snapped.topPx - ySv.value * canvasHeight;
     })
     .onFinalize(() => {
       commitTransform();
@@ -336,37 +390,10 @@ function TransformableLayer({
     ],
   }));
 
-  const verticalGuideStyle = useAnimatedStyle(() => ({
-    opacity: showVerticalGuide.value,
-  }));
-
-  const horizontalGuideStyle = useAnimatedStyle(() => ({
-    opacity: showHorizontalGuide.value,
-  }));
-
   return (
-    <>
-      <GestureDetector gesture={gesture}>
-        <Animated.View style={animatedStyle}>{children}</Animated.View>
-      </GestureDetector>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.verticalGuide,
-          { left: canvasWidth / 2 - 0.5, height: canvasHeight },
-          verticalGuideStyle,
-        ]}
-      />
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.horizontalGuide,
-          { top: canvasHeight / 2 - 0.5, width: canvasWidth },
-          horizontalGuideStyle,
-        ]}
-      />
-    </>
+    <GestureDetector gesture={gesture}>
+      <Animated.View style={animatedStyle}>{children}</Animated.View>
+    </GestureDetector>
   );
 }
 
@@ -483,7 +510,10 @@ function TextLayerView({
 }) {
   const fontOption = FONT_OPTIONS.find((f) => f.key === layer.fontKey);
   const fontFamily = fontOption?.fontFamily ?? "serif";
-  const { width, height } = getTextBaseSize(layer);
+  const textSize = getTextBaseSize(layer);
+  const width = textSize.width;
+  const height = textSize.height;
+  const lines = (layer.text || "Text").split(/\r?\n/);
 
   return (
     <TransformableLayer
@@ -500,16 +530,32 @@ function TextLayerView({
       onTap={() => onPress?.(layer.id)}
       onDoubleTap={() => onDoubleTap?.(layer.id)}
     >
-      <View style={[styles.textChip, selected && styles.textChipSelected]}>
-        <Text
-          style={{
-            fontFamily,
-            fontSize: layer.fontSize,
-            color: layer.color,
-          }}
-        >
-          {layer.text || "Text"}
-        </Text>
+      <View
+        style={[
+          styles.textChip,
+          { width, height },
+          selected && styles.textChipSelected,
+        ]}
+      >
+        {lines.map((line, index) => (
+          <Text
+            key={`${layer.id}-line-${index}`}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+            allowFontScaling={false}
+            style={{
+              fontFamily,
+              fontSize: layer.fontSize,
+              lineHeight: textSize.lineHeight,
+              color: layer.color,
+              includeFontPadding: false,
+              width: textSize.textWidth,
+              flexShrink: 0,
+            }}
+          >
+            {line || " "}
+          </Text>
+        ))}
       </View>
     </TransformableLayer>
   );
@@ -525,6 +571,7 @@ export default function ProjectCanvas({
   onAssetDoubleTap,
   onTextDoubleTap,
   onTextPress,
+  onCanvasPress,
   selectedTextLayerId,
 }: ProjectCanvasProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -581,7 +628,12 @@ export default function ProjectCanvas({
   const ready = size.width > 0 && size.height > 0;
 
   return (
-    <View style={[styles.canvas, styles.board]} onLayout={onLayout}>
+    <View
+      style={[styles.canvas, styles.board]}
+      onLayout={onLayout}
+      onStartShouldSetResponder={() => true}
+      onResponderRelease={onCanvasPress}
+    >
       {ready &&
         orderedLayers.map((entry) => {
           if (entry.kind === "stamp") {
@@ -656,20 +708,6 @@ const styles = StyleSheet.create({
   lockedBackground: {
     position: "absolute",
   },
-  verticalGuide: {
-    position: "absolute",
-    top: 0,
-    zIndex: 999,
-    width: 1,
-    backgroundColor: COLORS.primary,
-  },
-  horizontalGuide: {
-    position: "absolute",
-    left: 0,
-    zIndex: 999,
-    height: 1,
-    backgroundColor: COLORS.primary,
-  },
   emptyWrap: {
     flex: 1,
     alignItems: "center",
@@ -690,8 +728,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   textChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    alignSelf: "flex-start",
+    paddingHorizontal: TEXT_HORIZONTAL_PADDING,
+    paddingVertical: TEXT_VERTICAL_PADDING,
     borderRadius: 10,
     backgroundColor: COLORS.canvasTextChip,
   },

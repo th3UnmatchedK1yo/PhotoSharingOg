@@ -47,7 +47,7 @@ export default function EditorScreen() {
   const titleSize = width < 360 ? 34 : isNarrow ? 38 : 42;
   const headerButtonSize = isNarrow ? 48 : 56;
   const cardActionSize = isNarrow ? 38 : 42;
-  const previewSize = width < 360 ? 74 : 82;
+  const previewSize = width < 360 ? 70 : 78;
   const projectTitleSize = width < 360 ? 24 : 28;
 
   const loadProjects = useCallback(async () => {
@@ -542,11 +542,13 @@ const styles = StyleSheet.create({
   },
   previewRow: {
     flexDirection: "row",
-    gap: 12,
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
   },
   previewThumb: {
-    flexShrink: 0,
+    flex: 1,
+    alignItems: "center",
   },
   previewPlaceholder: {
     fontSize: 15,

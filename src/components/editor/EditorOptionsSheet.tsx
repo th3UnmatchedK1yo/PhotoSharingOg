@@ -234,7 +234,9 @@ export default function EditorOptionsSheet({
                     <View style={styles.editorTopGap} />
 
                     <View style={styles.textActionsRow}>
-                      <Text style={styles.editorLabel}>Font</Text>
+                      <Text style={[styles.editorLabel, styles.editorLabelInline]}>
+                        Font
+                      </Text>
                       <Pressable
                         style={styles.deleteButton}
                         onPress={onDeleteSelectedText}
@@ -518,6 +520,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  editorLabelInline: {
+    marginBottom: 0,
   },
   deleteButton: {
     paddingHorizontal: 12,
@@ -558,13 +564,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    minHeight: 76,
     backgroundColor: COLORS.surface,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingVertical: 12,
     marginBottom: 12,
+    gap: 14,
   },
   fontCardActive: {
     borderColor: COLORS.primary,
@@ -572,11 +580,14 @@ const styles = StyleSheet.create({
   },
   fontPreview: {
     fontSize: 22,
+    lineHeight: 44,
     color: COLORS.text,
+    flex: 1,
   },
   fontAction: {
     fontSize: 15,
     fontWeight: "600",
     color: COLORS.textSoft,
+    flexShrink: 0,
   },
 });

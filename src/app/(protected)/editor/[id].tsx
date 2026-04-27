@@ -229,7 +229,7 @@ export default function ProjectDetailScreen() {
       return;
     }
 
-    setSelectedTextLayerId(project.canvas.textLayers[0]?.id ?? null);
+    setSelectedTextLayerId(null);
   }, [project, selectedTextLayerId]);
 
   const queueCanvasPersist = useCallback(
@@ -703,32 +703,9 @@ export default function ProjectDetailScreen() {
           onAssetDoubleTap={onDeleteAssetLayer}
           onTextDoubleTap={onDeleteTextLayer}
           onTextPress={onTextPress}
+          onCanvasPress={() => setSelectedTextLayerId(null)}
           selectedTextLayerId={selectedTextLayerId}
         />
-      </View>
-
-      <View style={styles.toolbar}>
-        <Pressable
-          style={styles.toolBtn}
-          onPress={() => {
-            setActiveTab("backgrounds");
-            setSheetOpen(true);
-          }}
-        >
-          <Ionicons name="image-outline" size={22} color={COLORS.textSoft} />
-          <Text style={styles.toolLabel}>BG</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.toolBtn}
-          onPress={() => {
-            setActiveTab("text");
-            setSheetOpen(true);
-          }}
-        >
-          <Ionicons name="text-outline" size={22} color={COLORS.textSoft} />
-          <Text style={styles.toolLabel}>Text</Text>
-        </Pressable>
       </View>
 
       <EditorOptionsSheet
@@ -789,29 +766,7 @@ const styles = StyleSheet.create({
   canvasWrap: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  toolbar: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    paddingVertical: 12,
     paddingBottom: 28,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-  },
-  toolBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 64,
-    paddingVertical: 6,
-  },
-  toolLabel: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.textSoft,
   },
   center: {
     flex: 1,

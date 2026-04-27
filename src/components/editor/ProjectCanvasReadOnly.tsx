@@ -30,6 +30,8 @@ const STAMP_BASE_WIDTH = 122;
 const STAMP_BASE_HEIGHT = Math.round(STAMP_BASE_WIDTH * 1.25);
 const BASE_DECORATION_LONG_SIDE = 92;
 const BACKGROUND_ASPECT_RATIO = 1587 / 2245;
+const TEXT_HORIZONTAL_PADDING = 8;
+const TEXT_VERTICAL_PADDING = 4;
 
 function resolveEditorImageSource(layer: AssetLayer) {
   if (layer.imageUri) {
@@ -79,10 +81,22 @@ function getDecorationBaseSize(layer: AssetLayer) {
 }
 
 function getTextBaseSize(layer: TextLayer) {
-  const safeText = layer.text?.trim() || "Text";
-  const width = Math.max(88, safeText.length * layer.fontSize * 0.56);
-  const height = Math.max(42, layer.fontSize * 1.55);
-  return { width, height };
+  const safeText = layer.text || "Text";
+  const lines = safeText.split(/\r?\n/);
+  const longestLine = lines.reduce(
+    (longest, line) => (line.length > longest.length ? line : longest),
+    "",
+  );
+  const isScriptFont =
+    layer.fontKey === "fz-kingshare" ||
+    layer.fontKey === "blosta-script" ||
+    layer.fontKey === "pinyon-script";
+  const widthFactor = isScriptFont ? 1.08 : 0.68;
+  const lineHeight = layer.fontSize * (isScriptFont ? 1.75 : 1.28);
+  const textWidth = Math.max(34, longestLine.length * layer.fontSize * widthFactor);
+  const width = textWidth + TEXT_HORIZONTAL_PADDING * 2;
+  const height = lines.length * lineHeight + TEXT_VERTICAL_PADDING * 2;
+  return { width, height, lineHeight, textWidth };
 }
 
 function StampLayerView({
@@ -183,7 +197,10 @@ function TextLayerView({
 }) {
   const fontOption = FONT_OPTIONS.find((f) => f.key === layer.fontKey);
   const fontFamily = fontOption?.fontFamily ?? "serif";
-  const { width, height } = getTextBaseSize(layer);
+  const textSize = getTextBaseSize(layer);
+  const width = textSize.width;
+  const height = textSize.height;
+  const lines = (layer.text || "Text").split(/\r?\n/);
 
   return (
     <View
@@ -193,7 +210,9 @@ function TextLayerView({
           left: layer.x * canvasWidth,
           top: layer.y * canvasHeight,
           width,
-          minHeight: height,
+          height,
+          paddingHorizontal: TEXT_HORIZONTAL_PADDING,
+          paddingVertical: TEXT_VERTICAL_PADDING,
           zIndex: layer.z,
           transform: [
             { rotateZ: `${layer.rotation}deg` },
@@ -202,15 +221,25 @@ function TextLayerView({
         },
       ]}
     >
-      <Text
-        style={{
-          fontFamily,
-          fontSize: layer.fontSize,
-          color: layer.color,
-        }}
-      >
-        {layer.text || "Text"}
-      </Text>
+      {lines.map((line, index) => (
+        <Text
+          key={`${layer.id}-line-${index}`}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+          allowFontScaling={false}
+          style={{
+            fontFamily,
+            fontSize: layer.fontSize,
+            lineHeight: textSize.lineHeight,
+            color: layer.color,
+            includeFontPadding: false,
+            width: textSize.textWidth,
+            flexShrink: 0,
+          }}
+        >
+          {line || " "}
+        </Text>
+      ))}
     </View>
   );
 }
