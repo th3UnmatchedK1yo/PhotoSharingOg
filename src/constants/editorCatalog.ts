@@ -18,21 +18,7 @@ export const BACKGROUND_OPTIONS: CatalogItem[] = [
     label: "Background 3",
     source: require("../assets/editor/backgrounds/bg3.png"),
   },
-  {
-    key: "bg4",
-    label: "Background 4",
-    source: require("../assets/editor/backgrounds/bg4.png"),
-  },
-  {
-    key: "bg5",
-    label: "Background 5",
-    source: require("../assets/editor/backgrounds/bg5.png"),
-  },
-  {
-    key: "bg6",
-    label: "Background 6",
-    source: require("../assets/editor/backgrounds/bg6.png"),
-  },
+  
 ];
 
 export const ASSET_SECTIONS: Array<{ title: string; items: CatalogItem[] }> = [
@@ -248,6 +234,16 @@ export const FONT_OPTIONS = [
     key: "fz-kingshare" as const,
     label: "Kingshare",
     fontFamily: "FzKingshare",
+  },
+  {
+    key: "blosta-script" as const,
+    label: "Blosta Script",
+    fontFamily: "BlostaScript",
+  },
+  {
+    key: "pinyon-script" as const,
+    label: "Pinyon Script",
+    fontFamily: "PinyonScript",
   },
 ];
 

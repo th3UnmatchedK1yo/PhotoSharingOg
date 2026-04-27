@@ -10,11 +10,14 @@ import {
   View,
   Pressable,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import ProjectCanvasReadOnly from "../../../../components/editor/ProjectCanvasReadOnly";
 import { COLORS } from "../../../../constants/theme";
 import { getSharedProjectDetail } from "../../../../services/social";
 import type { PublicProfile, SharedProjectDetail } from "../../../../types/social";
+
+const EDITOR_CANVAS_HEIGHT_RATIO = 1.78;
 
 function formatProfileName(profile: PublicProfile | null) {
   if (!profile) return "Unknown";
@@ -79,9 +82,12 @@ function ProfileAvatar({
 export default function SharedProjectViewerScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { width } = useWindowDimensions();
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<SharedProjectDetail | null>(null);
+  const canvasWidth = width - 40;
+  const canvasHeight = canvasWidth * EDITOR_CANVAS_HEIGHT_RATIO;
 
   const loadDetail = useCallback(async () => {
     if (!id) return;
@@ -166,19 +172,11 @@ export default function SharedProjectViewerScreen() {
           <Text style={styles.caption}>{detail.caption}</Text>
         )}
 
-        <View style={styles.canvasWrap}>
+        <View style={[styles.canvasWrap, { height: canvasHeight }]}>
           <ProjectCanvasReadOnly
             canvas={detail.project.canvas}
             stamps={detail.stamps}
           />
-        </View>
-
-        <View style={styles.metaCard}>
-          <Text style={styles.metaTitle}>Project details</Text>
-          <Text style={styles.metaText}>
-            {detail.stamps.length} stamp{detail.stamps.length === 1 ? "" : "s"}
-          </Text>
-          <Text style={styles.metaText}>Shared privately with friends only</Text>
         </View>
       </ScrollView>
     </View>
@@ -268,25 +266,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   canvasWrap: {
-    minHeight: 460,
-    marginBottom: 16,
-  },
-  metaCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 16,
-  },
-  metaTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 10,
-  },
-  metaText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: COLORS.textMuted,
+    minHeight: 620,
   },
 });

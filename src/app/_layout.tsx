@@ -9,6 +9,8 @@ import { AuthProvider } from "../providers/AuthProvider";
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     FzKingshare: require("../assets/fonts/Kingshare.ttf"),
+    BlostaScript: require("../assets/fonts/BlostaScript.otf"),
+    PinyonScript: require("../assets/fonts/PinyonScript-Regular.ttf"),
   });
 
   if (!fontsLoaded) {

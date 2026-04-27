@@ -1,6 +1,10 @@
 import type { Stamp } from "./stamp";
 
-export type FontKey = "classic-serif" | "fz-kingshare";
+export type FontKey =
+  | "classic-serif"
+  | "fz-kingshare"
+  | "blosta-script"
+  | "pinyon-script";
 
 export type StampLayer = {
   id: string;

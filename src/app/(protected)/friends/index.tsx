@@ -23,6 +23,7 @@ import {
   getIncomingFriendRequests,
   getOutgoingFriendRequests,
   getSharedFeed,
+  removeFriend,
   searchProfiles,
   sendFriendRequest,
 } from "../../../services/social";
@@ -165,6 +166,14 @@ export default function FriendsScreen() {
     [friends],
   );
 
+  const friendByUserId = useMemo(() => {
+    const map = new Map<string, FriendItem>();
+    for (const item of friends) {
+      map.set(item.userId, item);
+    }
+    return map;
+  }, [friends]);
+
   const onSearch = async () => {
     try {
       setSearching(true);
@@ -228,6 +237,27 @@ export default function FriendsScreen() {
     }
   };
 
+  const onRemoveFriend = (friendshipId: string, name: string) => {
+    if (!user) return;
+
+    Alert.alert("Unfriend", `Remove ${name} from your friends?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Unfriend",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await removeFriend(friendshipId);
+            await loadScreen();
+          } catch (error) {
+            console.log("removeFriend error:", error);
+            Alert.alert("Error", "Failed to unfriend.");
+          }
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
@@ -287,6 +317,7 @@ export default function FriendsScreen() {
             <View style={styles.resultList}>
               {searchResults.map((profile) => {
                 const isFriend = friendIds.has(profile.id);
+                const friend = friendByUserId.get(profile.id);
                 const incoming = incomingByUserId.get(profile.id);
                 const outgoing = outgoingByUserId.get(profile.id);
 
@@ -307,10 +338,18 @@ export default function FriendsScreen() {
                       </View>
                     </View>
 
-                    {isFriend ? (
-                      <View style={styles.statusPill}>
-                        <Text style={styles.statusPillText}>Friends</Text>
-                      </View>
+                    {isFriend && friend ? (
+                      <Pressable
+                        style={styles.unfriendButtonSmall}
+                        onPress={() =>
+                          onRemoveFriend(
+                            friend.friendshipId,
+                            formatProfileName(profile),
+                          )
+                        }
+                      >
+                        <Text style={styles.unfriendButtonText}>Unfriend</Text>
+                      </Pressable>
                     ) : incoming ? (
                       <Pressable
                         style={styles.primaryButtonSmall}
@@ -442,9 +481,17 @@ export default function FriendsScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.friendBadge}>
-                    <Text style={styles.friendBadgeText}>Friend</Text>
-                  </View>
+                  <Pressable
+                    style={styles.unfriendButtonSmall}
+                    onPress={() =>
+                      onRemoveFriend(
+                        item.friendshipId,
+                        formatProfileName(item.user),
+                      )
+                    }
+                  >
+                    <Text style={styles.unfriendButtonText}>Unfriend</Text>
+                  </Pressable>
                 </View>
               ))}
             </View>
@@ -697,6 +744,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: COLORS.textMuted,
+  },
+  unfriendButtonSmall: {
+    flexShrink: 0,
+    minWidth: 84,
+    minHeight: 40,
+    borderRadius: 14,
+    backgroundColor: COLORS.dangerSoft,
+    borderWidth: 1,
+    borderColor: COLORS.dangerSoft,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  unfriendButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.danger,
   },
   statusPill: {
     flexShrink: 0,

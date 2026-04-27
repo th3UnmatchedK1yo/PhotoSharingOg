@@ -317,6 +317,18 @@ export async function cancelOutgoingFriendRequest(friendshipId: string) {
   }
 }
 
+export async function removeFriend(friendshipId: string) {
+  const { error } = await supabase
+    .from("friendships")
+    .delete()
+    .eq("id", friendshipId)
+    .eq("status", "accepted");
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function getIncomingFriendRequests(
   userId: string,
 ): Promise<FriendRequestItem[]> {

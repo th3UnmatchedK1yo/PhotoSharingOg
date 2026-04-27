@@ -33,8 +33,6 @@ type EditorOptionsSheetProps = {
   selectedBackground: string;
   onSelectBackground: (key: string) => void;
   onAddAsset: (assetKey: string) => void;
-  onAddUploadedImage: () => void;
-  uploadingImage: boolean;
   onAddText: (fontKey: FontKey) => void;
   textLayers: TextOption[];
   selectedTextLayerId: string | null;
@@ -54,8 +52,6 @@ export default function EditorOptionsSheet({
   selectedBackground,
   onSelectBackground,
   onAddAsset,
-  onAddUploadedImage,
-  uploadingImage,
   onAddText,
   textLayers,
   selectedTextLayerId,
@@ -169,19 +165,6 @@ export default function EditorOptionsSheet({
 
             {activeTab === "assets" && (
               <View>
-                <Pressable
-                  style={styles.uploadAssetCard}
-                  onPress={onAddUploadedImage}
-                  disabled={uploadingImage}
-                >
-                  <Text style={styles.uploadAssetTitle}>
-                    {uploadingImage ? "Uploading..." : "Upload image"}
-                  </Text>
-                  <Text style={styles.uploadAssetText}>
-                    Add a photo from your device to this canvas.
-                  </Text>
-                </Pressable>
-
                 {ASSET_SECTIONS.map((section) => (
                   <View key={section.title} style={styles.assetSection}>
                     <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -449,25 +432,6 @@ const styles = StyleSheet.create({
   },
   assetSection: {
     marginBottom: 20,
-  },
-  uploadAssetCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    padding: 16,
-    marginBottom: 20,
-  },
-  uploadAssetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 6,
-  },
-  uploadAssetText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: COLORS.textMuted,
   },
   assetGrid: {
     flexDirection: "row",

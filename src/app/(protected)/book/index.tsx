@@ -29,7 +29,7 @@ export default function BookScreen() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  const titleSize = width < 390 ? 36 : 42;
+  const titleSize = width < 390 ? 34 : 42;
   const previewSize = width < 390 ? 80 : 90;
 
   const loadData = useCallback(async () => {
@@ -105,7 +105,14 @@ export default function BookScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <Text style={[styles.title, { fontSize: titleSize }]}>Collections</Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
+          style={[styles.title, { fontSize: titleSize }]}
+        >
+          Collections
+        </Text>
         <View style={styles.headerActions}>
           <Pressable
             style={styles.uploadButton}
@@ -205,6 +212,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
+    flexShrink: 1,
     fontWeight: "700",
     color: COLORS.text,
   },

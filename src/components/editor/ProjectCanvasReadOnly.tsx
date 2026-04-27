@@ -44,14 +44,11 @@ function isBackgroundAssetKey(key: string) {
 }
 
 function getBackgroundBaseSize(canvasWidth: number, canvasHeight: number) {
-  const maxWidth = canvasWidth * 0.86;
-  const maxHeight = canvasHeight * 0.86;
-
-  let width = maxWidth;
+  let width = canvasWidth;
   let height = width / BACKGROUND_ASPECT_RATIO;
 
-  if (height > maxHeight) {
-    height = maxHeight;
+  if (height < canvasHeight) {
+    height = canvasHeight;
     width = height * BACKGROUND_ASPECT_RATIO;
   }
 
@@ -131,9 +128,29 @@ function AssetLayerView({
   const source = resolveEditorImageSource(layer);
   if (!source) return null;
 
-  const { width, height } = isBackgroundAssetKey(layer.assetKey)
+  const isBackground = isBackgroundAssetKey(layer.assetKey);
+  const { width, height } = isBackground
     ? getBackgroundBaseSize(canvasWidth, canvasHeight)
     : getDecorationBaseSize(layer);
+
+  if (isBackground) {
+    return (
+      <View
+        style={[
+          styles.absoluteLayer,
+          {
+            left: (canvasWidth - width) / 2,
+            top: (canvasHeight - height) / 2,
+            width,
+            height,
+            zIndex: layer.z,
+          },
+        ]}
+      >
+        <Image source={source} style={{ width, height }} resizeMode="cover" />
+      </View>
+    );
+  }
 
   return (
     <View
@@ -290,6 +307,7 @@ export default function ProjectCanvasReadOnly({
 
 const styles = StyleSheet.create({
   canvas: {
+    flex: 1,
     minHeight: 440,
     borderRadius: 28,
     overflow: "hidden",

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,11 +11,17 @@ import {
   Text,
   View,
 } from "react-native";
+import { captureRef } from "react-native-view-shot";
 import EditorOptionsSheet from "../../../components/editor/EditorOptionsSheet";
 import ProjectCanvas from "../../../components/editor/ProjectCanvas";
 import { COLORS } from "../../../constants/theme";
-import { getProject, updateProjectDesign } from "../../../services/projects";
-import { uploadEditorImage } from "../../../services/upload";
+import { useAuth } from "../../../providers/AuthProvider";
+import {
+  getProject,
+  saveProjectStamps,
+  updateProjectDesign,
+} from "../../../services/projects";
+import { saveRemoteStamp } from "../../../services/stamps";
 import type {
   AssetLayer,
   FontKey,
@@ -98,10 +105,10 @@ function buildBackgroundLayer(
   return {
     id: BACKGROUND_LAYER_ID,
     assetKey,
-    x: existing?.x ?? 0.07,
-    y: existing?.y ?? 0.12,
-    scale: existing?.scale ?? 1,
-    rotation: existing?.rotation ?? 0,
+    x: existing?.x ?? 0,
+    y: existing?.y ?? 0,
+    scale: 1,
+    rotation: 0,
     z: 0,
   };
 }
@@ -120,18 +127,21 @@ type SheetTab = "backgrounds" | "assets" | "text";
 export default function ProjectDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { user } = useAuth();
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SheetTab>("backgrounds");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [selectedTextLayerId, setSelectedTextLayerId] = useState<string | null>(
     null,
   );
 
   const didReconcile = useRef(false);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canvasCaptureRef = useRef<View | null>(null);
 
   const loadProject = useCallback(async () => {
     if (!id) return;
@@ -367,7 +377,7 @@ export default function ProjectDetailScreen() {
   };
 
   const onAddUploadedImage = async () => {
-    if (!project || uploadingImage) return;
+    if (!project || !user || uploadingImage) return;
 
     try {
       const permission =
@@ -391,14 +401,16 @@ export default function ProjectDetailScreen() {
 
       setUploadingImage(true);
       const picked = result.assets[0];
-      const uploaded = await uploadEditorImage(picked.uri);
+      const newStamp = await saveRemoteStamp({
+        userId: user.id,
+        localUri: picked.uri,
+        title: "",
+        caption: "",
+      });
 
-      const newLayer: AssetLayer = {
-        id: `al-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        assetKey: "uploaded-image",
-        imageUri: uploaded.imageUrl,
-        imageWidth: picked.width,
-        imageHeight: picked.height,
+      const newLayer: StampLayer = {
+        id: `sl-${newStamp.id}`,
+        stampId: newStamp.id,
         x: 0.18,
         y: 0.18,
         scale: 1,
@@ -408,13 +420,31 @@ export default function ProjectDetailScreen() {
 
       const updatedCanvas: ProjectCanvasConfig = {
         ...project.canvas,
-        assetLayers: [...project.canvas.assetLayers, newLayer],
+        stampLayers: [...project.canvas.stampLayers, newLayer],
       };
+      const nextStampIds = [
+        ...project.stamps.map((stamp) => stamp.id),
+        newStamp.id,
+      ];
 
-      await saveCanvas(updatedCanvas);
+      setProject((prev) =>
+        prev
+          ? {
+              ...prev,
+              stamps: [...prev.stamps, newStamp],
+              canvas: updatedCanvas,
+            }
+          : prev,
+      );
+
+      await Promise.all([
+        saveProjectStamps(project.id, nextStampIds),
+        updateProjectDesign(project.id, { canvas: updatedCanvas }),
+      ]);
     } catch (error) {
       console.log("editor upload image error:", error);
-      Alert.alert("Error", "Failed to upload image to the editor.");
+      Alert.alert("Error", "Failed to upload image as a stamp.");
+      loadProject();
     } finally {
       setUploadingImage(false);
     }
@@ -486,6 +516,102 @@ export default function ProjectDetailScreen() {
     saveCanvas({ ...project.canvas, textLayers });
   };
 
+  const onDeleteStampLayer = async (layerId: string) => {
+    if (!project) return;
+
+    const targetLayer = project.canvas.stampLayers.find(
+      (layer) => layer.id === layerId,
+    );
+    if (!targetLayer) return;
+
+    const stampLayers = project.canvas.stampLayers.filter(
+      (layer) => layer.id !== layerId,
+    );
+    const nextStamps = project.stamps.filter(
+      (stamp) => stamp.id !== targetLayer.stampId,
+    );
+    const updatedCanvas = { ...project.canvas, stampLayers };
+
+    setProject((prev) =>
+      prev
+        ? {
+            ...prev,
+            stamps: nextStamps,
+            canvas: updatedCanvas,
+          }
+        : prev,
+    );
+
+    try {
+      await Promise.all([
+        saveProjectStamps(
+          project.id,
+          nextStamps.map((stamp) => stamp.id),
+        ),
+        updateProjectDesign(project.id, { canvas: updatedCanvas }),
+      ]);
+    } catch (error) {
+      console.log("delete stamp layer error:", error);
+      Alert.alert("Error", "Failed to remove stamp from project.");
+      loadProject();
+    }
+  };
+
+  const onDeleteAssetLayer = (layerId: string) => {
+    if (!project || layerId === BACKGROUND_LAYER_ID) return;
+
+    const assetLayers = project.canvas.assetLayers.filter(
+      (layer) => layer.id !== layerId,
+    );
+
+    saveCanvas({ ...project.canvas, assetLayers });
+  };
+
+  const onDeleteTextLayer = (layerId: string) => {
+    if (!project) return;
+
+    const textLayers = project.canvas.textLayers.filter(
+      (layer) => layer.id !== layerId,
+    );
+
+    if (selectedTextLayerId === layerId) {
+      setSelectedTextLayerId(textLayers[0]?.id ?? null);
+    }
+
+    saveCanvas({ ...project.canvas, textLayers });
+  };
+
+  const onDownloadCanvas = async () => {
+    if (!canvasCaptureRef.current || downloading) return;
+
+    try {
+      const permission = await MediaLibrary.requestPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Photo access needed",
+          "Allow photo access so you can save the editor image to your library.",
+        );
+        return;
+      }
+
+      setDownloading(true);
+      const uri = await captureRef(canvasCaptureRef.current, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+      });
+
+      await MediaLibrary.saveToLibraryAsync(uri);
+      Alert.alert("Saved", "Your editor image was saved to your photo library.");
+    } catch (error) {
+      console.log("download canvas error:", error);
+      Alert.alert("Error", "Failed to save the editor image.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -510,31 +636,72 @@ export default function ProjectDetailScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <Pressable style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.textSoft} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.circleButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color={COLORS.textSoft} />
+          </Pressable>
 
-        <Text numberOfLines={1} style={styles.title}>
-          {project.name}
-        </Text>
+          <Pressable
+            style={styles.circleButton}
+            onPress={onDownloadCanvas}
+            disabled={downloading}
+          >
+            <Ionicons
+              name={downloading ? "hourglass-outline" : "download-outline"}
+              size={22}
+              color={COLORS.textSoft}
+            />
+          </Pressable>
+        </View>
 
-        <Pressable
-          style={styles.circleButton}
-          onPress={() =>
-            router.push(`/editor/select-stamps?projectId=${project.id}`)
-          }
-        >
-          <Ionicons name="images-outline" size={22} color={COLORS.textSoft} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.circleButton}
+            onPress={onAddUploadedImage}
+            disabled={uploadingImage}
+          >
+            <Ionicons
+              name={uploadingImage ? "hourglass-outline" : "image-outline"}
+              size={22}
+              color={COLORS.textSoft}
+            />
+          </Pressable>
+
+          <Pressable
+            style={styles.circleButton}
+            onPress={() =>
+              router.push(`/editor/select-stamps?projectId=${project.id}`)
+            }
+          >
+            <Ionicons name="albums-outline" size={22} color={COLORS.textSoft} />
+          </Pressable>
+
+          <Pressable
+            style={styles.circleButton}
+            onPress={() => {
+              setActiveTab("assets");
+              setSheetOpen(true);
+            }}
+          >
+            <Ionicons
+              name="color-palette-outline"
+              size={22}
+              color={COLORS.textSoft}
+            />
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.canvasWrap}>
+      <View ref={canvasCaptureRef} collapsable={false} style={styles.canvasWrap}>
         <ProjectCanvas
           canvas={project.canvas}
           stamps={project.stamps}
           onStampTransformEnd={onStampTransformEnd}
           onAssetTransformEnd={onAssetTransformEnd}
           onTextTransformEnd={onTextTransformEnd}
+          onStampDoubleTap={onDeleteStampLayer}
+          onAssetDoubleTap={onDeleteAssetLayer}
+          onTextDoubleTap={onDeleteTextLayer}
           onTextPress={onTextPress}
           selectedTextLayerId={selectedTextLayerId}
         />
@@ -550,17 +717,6 @@ export default function ProjectDetailScreen() {
         >
           <Ionicons name="image-outline" size={22} color={COLORS.textSoft} />
           <Text style={styles.toolLabel}>BG</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.toolBtn}
-          onPress={() => {
-            setActiveTab("assets");
-            setSheetOpen(true);
-          }}
-        >
-          <Ionicons name="sparkles-outline" size={22} color={COLORS.textSoft} />
-          <Text style={styles.toolLabel}>Assets</Text>
         </Pressable>
 
         <Pressable
@@ -583,8 +739,6 @@ export default function ProjectDetailScreen() {
         selectedBackground={getSelectedBackgroundKey(project)}
         onSelectBackground={onChangeBackground}
         onAddAsset={onAddAsset}
-        onAddUploadedImage={onAddUploadedImage}
-        uploadingImage={uploadingImage}
         onAddText={onAddText}
         textLayers={project.canvas.textLayers.map((layer) => ({
           id: layer.id,
@@ -614,7 +768,13 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   circleButton: {
     width: 48,
@@ -625,13 +785,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
-  },
-  title: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 22,
-    fontWeight: "700",
-    color: COLORS.text,
   },
   canvasWrap: {
     flex: 1,

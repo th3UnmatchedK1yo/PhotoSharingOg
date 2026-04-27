@@ -41,6 +41,9 @@ type ProjectCanvasProps = {
   onStampTransformEnd?: (layerId: string, next: LayerTransform) => void;
   onAssetTransformEnd?: (layerId: string, next: LayerTransform) => void;
   onTextTransformEnd?: (layerId: string, next: LayerTransform) => void;
+  onStampDoubleTap?: (layerId: string) => void;
+  onAssetDoubleTap?: (layerId: string) => void;
+  onTextDoubleTap?: (layerId: string) => void;
   onTextPress?: (layerId: string) => void;
   selectedTextLayerId?: string | null;
 };
@@ -57,6 +60,7 @@ const BACKGROUND_ASPECT_RATIO = 1587 / 2245;
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 4;
 const RAD_TO_DEG = 180 / Math.PI;
+const ALIGN_THRESHOLD = 7;
 
 function clamp(value: number, min: number, max: number) {
   "worklet";
@@ -85,14 +89,11 @@ function isBackgroundAssetKey(key: string) {
 }
 
 function getBackgroundBaseSize(canvasWidth: number, canvasHeight: number) {
-  const maxWidth = canvasWidth * 0.86;
-  const maxHeight = canvasHeight * 0.86;
-
-  let width = maxWidth;
+  let width = canvasWidth;
   let height = width / BACKGROUND_ASPECT_RATIO;
 
-  if (height > maxHeight) {
-    height = maxHeight;
+  if (height < canvasHeight) {
+    height = canvasHeight;
     width = height * BACKGROUND_ASPECT_RATIO;
   }
 
@@ -167,6 +168,7 @@ function TransformableLayer({
   baseHeight,
   onTransformEnd,
   onTap,
+  onDoubleTap,
   children,
 }: {
   x: number;
@@ -180,6 +182,7 @@ function TransformableLayer({
   baseHeight: number;
   onTransformEnd: (next: LayerTransform) => void;
   onTap?: () => void;
+  onDoubleTap?: () => void;
   children: React.ReactNode;
 }) {
   const xSv = useSharedValue(x);
@@ -191,6 +194,8 @@ function TransformableLayer({
   const dragY = useSharedValue(0);
   const pinchScale = useSharedValue(1);
   const rotateDeg = useSharedValue(0);
+  const showVerticalGuide = useSharedValue(0);
+  const showHorizontalGuide = useSharedValue(0);
 
   useEffect(() => {
     xSv.value = x;
@@ -209,11 +214,21 @@ function TransformableLayer({
     );
     const nextRotation = normalizeRotation(rotationSv.value + rotateDeg.value);
 
-    const rawLeftPx = xSv.value * canvasWidth + dragX.value;
-    const rawTopPx = ySv.value * canvasHeight + dragY.value;
+    let rawLeftPx = xSv.value * canvasWidth + dragX.value;
+    let rawTopPx = ySv.value * canvasHeight + dragY.value;
 
     const finalWidth = baseWidth * nextScale;
     const finalHeight = baseHeight * nextScale;
+    const layerCenterX = rawLeftPx + finalWidth / 2;
+    const layerCenterY = rawTopPx + finalHeight / 2;
+
+    if (Math.abs(layerCenterX - canvasWidth / 2) <= ALIGN_THRESHOLD) {
+      rawLeftPx = canvasWidth / 2 - finalWidth / 2;
+    }
+
+    if (Math.abs(layerCenterY - canvasHeight / 2) <= ALIGN_THRESHOLD) {
+      rawTopPx = canvasHeight / 2 - finalHeight / 2;
+    }
 
     const clampedLeftPx = clampLayerLeft(rawLeftPx, canvasWidth, finalWidth);
     const clampedTopPx = clampLayerTop(rawTopPx, canvasHeight, finalHeight);
@@ -230,6 +245,8 @@ function TransformableLayer({
     dragY.value = 0;
     pinchScale.value = 1;
     rotateDeg.value = 0;
+    showVerticalGuide.value = 0;
+    showHorizontalGuide.value = 0;
 
     runOnJS(onTransformEnd)({
       x: nextX,
@@ -240,9 +257,25 @@ function TransformableLayer({
   };
 
   const panGesture = Gesture.Pan()
+    .minDistance(1)
     .onUpdate((event) => {
       dragX.value = event.translationX;
       dragY.value = event.translationY;
+
+      const nextScale = clamp(
+        scaleSv.value * pinchScale.value,
+        MIN_SCALE,
+        MAX_SCALE,
+      );
+      const nextLeftPx = xSv.value * canvasWidth + event.translationX;
+      const nextTopPx = ySv.value * canvasHeight + event.translationY;
+      const centerX = nextLeftPx + (baseWidth * nextScale) / 2;
+      const centerY = nextTopPx + (baseHeight * nextScale) / 2;
+
+      showVerticalGuide.value =
+        Math.abs(centerX - canvasWidth / 2) <= ALIGN_THRESHOLD ? 1 : 0;
+      showHorizontalGuide.value =
+        Math.abs(centerY - canvasHeight / 2) <= ALIGN_THRESHOLD ? 1 : 0;
     })
     .onFinalize(() => {
       commitTransform();
@@ -272,7 +305,18 @@ function TransformableLayer({
       }
     });
 
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(240)
+    .maxDistance(10)
+    .onEnd((_event, success) => {
+      if (success && onDoubleTap) {
+        runOnJS(onDoubleTap)();
+      }
+    });
+
   const gesture = Gesture.Exclusive(
+    doubleTapGesture,
     tapGesture,
     Gesture.Simultaneous(panGesture, pinchGesture, rotationGesture),
   );
@@ -292,10 +336,37 @@ function TransformableLayer({
     ],
   }));
 
+  const verticalGuideStyle = useAnimatedStyle(() => ({
+    opacity: showVerticalGuide.value,
+  }));
+
+  const horizontalGuideStyle = useAnimatedStyle(() => ({
+    opacity: showHorizontalGuide.value,
+  }));
+
   return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View style={animatedStyle}>{children}</Animated.View>
-    </GestureDetector>
+    <>
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={animatedStyle}>{children}</Animated.View>
+      </GestureDetector>
+
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.verticalGuide,
+          { left: canvasWidth / 2 - 0.5, height: canvasHeight },
+          verticalGuideStyle,
+        ]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.horizontalGuide,
+          { top: canvasHeight / 2 - 0.5, width: canvasWidth },
+          horizontalGuideStyle,
+        ]}
+      />
+    </>
   );
 }
 
@@ -305,12 +376,14 @@ function StampLayerView({
   canvasWidth,
   canvasHeight,
   onTransformEnd,
+  onDoubleTap,
 }: {
   layer: StampLayer;
   stamp: Stamp;
   canvasWidth: number;
   canvasHeight: number;
   onTransformEnd: (layerId: string, next: LayerTransform) => void;
+  onDoubleTap?: (layerId: string) => void;
 }) {
   return (
     <TransformableLayer
@@ -324,6 +397,7 @@ function StampLayerView({
       baseWidth={STAMP_BASE_WIDTH}
       baseHeight={STAMP_BASE_HEIGHT}
       onTransformEnd={(next) => onTransformEnd(layer.id, next)}
+      onDoubleTap={() => onDoubleTap?.(layer.id)}
     >
       <StampFrame uri={stamp.imageUrl} size={STAMP_BASE_WIDTH} shadow={false} />
     </TransformableLayer>
@@ -335,18 +409,41 @@ function AssetLayerView({
   canvasWidth,
   canvasHeight,
   onTransformEnd,
+  onDoubleTap,
 }: {
   layer: AssetLayer;
   canvasWidth: number;
   canvasHeight: number;
   onTransformEnd: (layerId: string, next: LayerTransform) => void;
+  onDoubleTap?: (layerId: string) => void;
 }) {
   const source = resolveEditorImageSource(layer);
   if (!source) return null;
 
-  const { width, height } = isBackgroundAssetKey(layer.assetKey)
+  const isBackground = isBackgroundAssetKey(layer.assetKey);
+  const { width, height } = isBackground
     ? getBackgroundBaseSize(canvasWidth, canvasHeight)
     : getDecorationBaseSize(layer);
+
+  if (isBackground) {
+    return (
+      <View
+        pointerEvents="none"
+        style={[
+          styles.lockedBackground,
+          {
+            left: (canvasWidth - width) / 2,
+            top: (canvasHeight - height) / 2,
+            width,
+            height,
+            zIndex: layer.z,
+          },
+        ]}
+      >
+        <Image source={source} style={{ width, height }} resizeMode="cover" />
+      </View>
+    );
+  }
 
   return (
     <TransformableLayer
@@ -360,6 +457,7 @@ function AssetLayerView({
       baseWidth={width}
       baseHeight={height}
       onTransformEnd={(next) => onTransformEnd(layer.id, next)}
+      onDoubleTap={() => onDoubleTap?.(layer.id)}
     >
       <Image source={source} style={{ width, height }} resizeMode="contain" />
     </TransformableLayer>
@@ -373,6 +471,7 @@ function TextLayerView({
   selected,
   onTransformEnd,
   onPress,
+  onDoubleTap,
 }: {
   layer: TextLayer;
   canvasWidth: number;
@@ -380,6 +479,7 @@ function TextLayerView({
   selected: boolean;
   onTransformEnd: (layerId: string, next: LayerTransform) => void;
   onPress?: (layerId: string) => void;
+  onDoubleTap?: (layerId: string) => void;
 }) {
   const fontOption = FONT_OPTIONS.find((f) => f.key === layer.fontKey);
   const fontFamily = fontOption?.fontFamily ?? "serif";
@@ -398,6 +498,7 @@ function TextLayerView({
       baseHeight={height}
       onTransformEnd={(next) => onTransformEnd(layer.id, next)}
       onTap={() => onPress?.(layer.id)}
+      onDoubleTap={() => onDoubleTap?.(layer.id)}
     >
       <View style={[styles.textChip, selected && styles.textChipSelected]}>
         <Text
@@ -420,6 +521,9 @@ export default function ProjectCanvas({
   onStampTransformEnd,
   onAssetTransformEnd,
   onTextTransformEnd,
+  onStampDoubleTap,
+  onAssetDoubleTap,
+  onTextDoubleTap,
   onTextPress,
   selectedTextLayerId,
 }: ProjectCanvasProps) {
@@ -492,6 +596,7 @@ export default function ProjectCanvas({
                 canvasWidth={size.width}
                 canvasHeight={size.height}
                 onTransformEnd={onStampTransformEnd ?? (() => {})}
+                onDoubleTap={onStampDoubleTap}
               />
             );
           }
@@ -504,6 +609,7 @@ export default function ProjectCanvas({
                 canvasWidth={size.width}
                 canvasHeight={size.height}
                 onTransformEnd={onAssetTransformEnd ?? (() => {})}
+                onDoubleTap={onAssetDoubleTap}
               />
             );
           }
@@ -517,6 +623,7 @@ export default function ProjectCanvas({
               selected={selectedTextLayerId === entry.layer.id}
               onTransformEnd={onTextTransformEnd ?? (() => {})}
               onPress={onTextPress}
+              onDoubleTap={onTextDoubleTap}
             />
           );
         })}
@@ -545,6 +652,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceRaised,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  lockedBackground: {
+    position: "absolute",
+  },
+  verticalGuide: {
+    position: "absolute",
+    top: 0,
+    zIndex: 999,
+    width: 1,
+    backgroundColor: COLORS.primary,
+  },
+  horizontalGuide: {
+    position: "absolute",
+    left: 0,
+    zIndex: 999,
+    height: 1,
+    backgroundColor: COLORS.primary,
   },
   emptyWrap: {
     flex: 1,
